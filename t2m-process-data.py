@@ -1768,13 +1768,13 @@ def run_data():
     ].apply(
         lambda x: (
             "Rất thấp"
-            if x < 0.6
+            if x < 0.5
             else (
                 "Thấp"
-                if (x >= 0.6) & (x < 0.9)
+                if (x >= 0.5) & (x < 0.8)
                 else (
                     "Trung bình"
-                    if (x >= 0.9) & (x < 1.2)
+                    if (x >= 0.8) & (x < 1.2)
                     else ("Cao" if (x >= 1.2) & (x < 1.5) else "Rất cao")
                 )
             )
