@@ -3675,8 +3675,6 @@ import pandas as pd
 while True:
     try:
         start_time = time.time()
-        run_data()
-
         current_time = get_current_time(
             dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10)
         )
@@ -3684,24 +3682,24 @@ while True:
         if current_time == 0:
             print(
                 "Chưa tới thời gian giao dịch: ",
-                dt.datetime.now().time().strftime("%d/%m/%Y %H:%M:%S"),
+                dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             )
             time.sleep(60)
-            pass
+            continue
         elif current_time == 1:
             print(
                 "Đã hết thời gian giao dịch: ",
-                dt.datetime.now().time().strftime("%d/%m/%Y %H:%M:%S"),
+                dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             )
             time.sleep(64000)
-            pass
+            continue
         elif current_time == None:
             print(
                 "Ngày nghỉ không giao dịch: ",
-                dt.datetime.now().time().strftime("%d/%m/%Y %H:%M:%S"),
+                dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
             )
             time.sleep(86400)
-            pass
+            continue
 
         date_series = pd.read_csv(
             "D:\\t2m-project\\ami-data\\ami_eod_data\\VNINDEX.csv"
@@ -3710,6 +3708,7 @@ while True:
             date_series["date"].astype(str), format="%y%m%d"
         )
 
+        run_data()
         end_time = time.time()
 
         print(
