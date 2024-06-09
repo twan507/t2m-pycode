@@ -2,7 +2,6 @@ import subprocess
 import os
 
 try:
-    print("Precessing data ...")
     path = os.getcwd()
     subprocess.run(["python", path + "\\t2m-process-data.py"], check=True)
 

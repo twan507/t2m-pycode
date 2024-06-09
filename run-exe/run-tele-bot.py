@@ -5,7 +5,6 @@ import time
 path = os.getcwd()
 
 try:
-    print('Telegram Bot is running ...')
     subprocess.run(['python', path + '\\t2m-tele-bot.py'], check=True)
 except subprocess.CalledProcessError as e:
     print(f"Error: {type(e).__name__}")

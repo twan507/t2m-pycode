@@ -3173,8 +3173,10 @@ def run_data():
         .reset_index()
         .rename(columns={"index": "name"})
     )
-    group_score_df_5p['score'] = group_score_df_5p[['T-0','T-1','T-2','T-3','T-4']].sum(axis=1)
-    group_score_df_5p['rank'] = group_score_df_5p['score'].rank()
+    group_score_df_5p["score"] = group_score_df_5p[
+        ["T-0", "T-1", "T-2", "T-3", "T-4"]
+    ].sum(axis=1)
+    group_score_df_5p["rank"] = group_score_df_5p["score"].rank()
 
     group_score_df_5p["group"] = group_score_df_5p["name"].map(group_map_dict)
     group_score_df_5p["order"] = group_score_df_5p["name"].map(order_map_dict)
@@ -3670,6 +3672,8 @@ import time
 from datetime import datetime
 
 import pandas as pd
+
+print("Dữ liệu đang được xử lý ...")
 
 while True:
     try:
