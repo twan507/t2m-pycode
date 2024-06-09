@@ -1,0 +1,680 @@
+// QMV STRATERGY 2022
+// TRADERTRUONGDAO
+SetChartOptions(0,chartShowDates|chartShowArrows|chartLogarithmic|chartWrapTitle);
+function GetSecondNum()
+{
+    Time 		= Now( 4 );
+    Seconds 	= int( Time % 100 );
+    Minutes 	= int( Time / 100 % 100 );
+    Hours 	= int( Time / 10000 % 100 );
+    SecondNum = int( Hours * 60 * 60 + Minutes * 60 + Seconds );
+    return SecondNum;
+}
+
+RequestTimedRefresh( 5 );
+TimeFrame = Interval();
+SecNumber = GetSecondNum();
+Newperiod = SecNumber % TimeFrame == 0;
+SecsLeft	 = SecNumber - int( SecNumber / TimeFrame ) * TimeFrame;
+SecsToGo	 = TimeFrame - SecsLeft;
+
+// Market=WriteIf(Rouding>55000,"BLUECHIP",WriteIf(rouding<55000 AND Rouding >15000,"TOP VON HOA LON",WriteIf(rouding<15000 AND Rouding >5000,"TOP VON HOA TRUNG BINH",WriteIf(Rouding<5000 AND rouding>1500,"TOP DAU CO","PENNY"))));
+// Large-cap>15k
+// Higher Mid-cap 5k-15k
+// Lower Mid-cap 1.5k-5k
+// Small-cap <1.5k
+
+QUY=WriteIf(month() == 1 OR month() == 2 OR month() == 3,"Q1",WriteIf(month() == 4 OR month() == 5 OR month() == 6,"Q2",WriteIf(month() == 7 OR month() == 8 OR month() == 9,"Q3","Q4")));
+H1=(2*H+C)/3;
+L1=(2*L+C)/3;
+C1=(H1+L1+C)/3;
+V1=Volume*1000*(H+L+O+C)/4;
+
+// YEAR ZONE
+HY1 = TimeFrameGetPrice("H", inYearly, -1); HY1I = LastValue (HY1,1);					// LAST YEAR high
+LY1 = TimeFrameGetPrice("L", inYearly, -1); LY1I = LastValue (LY1,1);					// LAST YEAR low
+CY1 = TimeFrameGetPrice("C", inYearly, -1);	CY1I = LastValue (CY1,1);					// LAST YEAR close
+OY1 = TimeFrameGetPrice("O", inYearly, -1);	OY1I = LastValue (OY1,1);					// LAST YEAR open
+VY1 = TimeFrameGetPrice("V", inYearly, -1);	VY1I = LastValue (VY1,1);					// LAST YEAR VOLUME
+CHY = TimeFrameGetPrice("H", inYearly); CHYI = LastValue (CHY,1); 						// Current YEAR high
+CLY = TimeFrameGetPrice("L", inYearly); CLYI = LastValue (CLY,1);						// Current YEAR low
+COY = TimeFrameGetPrice("O", inYearly); COYI = LastValue (COY,1);						// Current YEAR open
+H2Y = IIf(CHY>HY1,CHY,HY1);																// HIGHEST 2 YEARS
+L2Y = IIf(CLY<LY1,CLY,LY1);																// LOWEST 2 YEARS
+YFIBO382 = 0.382*(H2Y-L2Y);
+YFIBO500 = 0.500*(H2Y-L2Y);
+YFIBO618 = 0.618*(H2Y-L2Y);
+Y382  =  H2Y-YFIBO382;      	Y382I = LastValue (Y382,1);   							// S1
+Y500  =  H2Y-YFIBO500;     		Y500I = LastValue (Y500,1);  							// S2
+Y618  =  H2Y-YFIBO618;          Y618I = LastValue (Y618,1);   							// S3
+PPY = (HY1 + LY1 + CY1)/3;  	PPYI = LastValue (PPY,1);   							// Pivot
+
+// QUARTER ZONE
+HQ1 = TimeFrameGetPrice("H", inQuarterly, -1); HQ1I = LastValue (HQ1,1);				// LAST QUARTER high
+LQ1 = TimeFrameGetPrice("L", inQuarterly, -1); LQ1I = LastValue (LQ1,1);				// LAST QUARTER low
+CQ1 = TimeFrameGetPrice("C", inQuarterly, -1);	CQ1I = LastValue (CQ1,1);				// LAST QUARTER close
+OQ1 = TimeFrameGetPrice("O", inQuarterly, -1);	OQ1I = LastValue (OQ1,1);				// LAST QUARTER open
+VQ1 = TimeFrameGetPrice("V", inQuarterly, -1);	VQ1I = LastValue (VQ1,1);				// LAST QUARTER VOLUME
+CHQ = TimeFrameGetPrice("H", inQuarterly); CHQI = LastValue (CHQ,1); 					// Current QUARTER high
+CLQ = TimeFrameGetPrice("L", inQuarterly); CLQI = LastValue (CLQ,1);					// Current QUARTER low
+COQ = TimeFrameGetPrice("O", inQuarterly); COQI = LastValue (COQ,1);					// Current QUARTER open
+H2Q = IIf(CHQ>HQ1,CHQ,HQ1);																// HIGHEST 2 QUARTERS
+L2Q = IIf(CLQ<LQ1,CLQ,LQ1);																// LOWEST 2 QUARTERS
+QFIBO382 = 0.382*(H2Q-L2Q);
+QFIBO500 = 0.500*(H2Q-L2Q);
+QFIBO618 = 0.618*(H2Q-L2Q);
+Q382  =  H2Q-QFIBO382;      	Q382I = LastValue (Q382,1);   							// S1
+Q500  =  H2Q-QFIBO500;     		Q500I = LastValue (Q500,1);  							// S2
+Q618  =  H2Q-QFIBO618;          Q618I = LastValue (Q618,1);   							// S3
+PPQ = (HQ1 + LQ1 + CQ1)/3;  	PPQI = LastValue (PPQ,1);   							// Pivot
+
+H120B = HHV(H,120);																		// HIGHEST 120 BARS
+L120B = LLV(L,120);																		// LOWEST 120 BARS
+H60B = HHV(H,60);																		// HIGHEST 60 BARS
+L60B = LLV(L,60);																		// LOWEST 60 BARS
+VTBQ=VQ1/60;																			// AVERAGE VOL 60 BARS
+
+// MONTH ZONE
+HM1 = TimeFrameGetPrice("H", inMonthly, -1); HM1I = LastValue (HM1,1);					// LAST MONTH high
+LM1 = TimeFrameGetPrice("L", inMonthly, -1); LM1I = LastValue (LM1,1);					// LAST MONTH low
+CM1 = TimeFrameGetPrice("C", inMonthly, -1);	CM1I = LastValue (CM1,1);				// LAST MONTH close
+OM1 = TimeFrameGetPrice("O", inMonthly, -1);	OM1I = LastValue (OM1,1);				// LAST MONTH open
+VM1 = TimeFrameGetPrice("V", inMonthly, -1);	VM1I = LastValue (VM1,1);				// LAST MONTH VOLUME
+CHM = TimeFrameGetPrice("H", inMonthly); CHMI = LastValue (CHM,1); 						// Current MONTH high
+CLM = TimeFrameGetPrice("L", inMonthly); CLMI = LastValue (CLM,1);						// Current MONTH low
+COM = TimeFrameGetPrice("O", inMonthly); COMI = LastValue (COM,1);						// Current MONTH open
+H2M = IIf(CHM>HM1,CHM,HM1);																// HIGHEST 2 MONTHS
+L2M = IIf(CLM<LM1,CLM,LM1);																// LOWEST 2 MONTHS
+MFIBO382 = 0.382*(H2M-L2M);
+MFIBO500 = 0.500*(H2M-L2M);
+MFIBO618 = 0.618*(H2M-L2M);
+M382  =  H2M-MFIBO382;      	M382I = LastValue (M382,1);   							// S1
+M500  =  H2M-MFIBO500;     		M500I = LastValue (M500,1);  							// S2
+M618  =  H2M-MFIBO618;          M618I = LastValue (M618,1);   							// S3
+PPM = (HM1 + LM1 + CM1)/3;  	PPMI = LastValue (PPM,1);   							// Pivot
+
+H40B = HHV(H,40);																		// HIGHEST 120 BARS
+L40B = LLV(L,40);																		// LOWEST 120 BARS
+H20B = HHV(H,20);																		// HIGHEST 60 BARS
+L20B = LLV(L,20);																		// LOWEST 60 BARS
+VTBM=VM1/20;																			// AVERAGE VOL 20 BARS
+
+// WEEK ZONE
+HW1 = TimeFrameGetPrice("H", inWeekly, -1); HW1I = LastValue (HW1,1);					// LAST WEEK high
+LW1 = TimeFrameGetPrice("L", inWeekly, -1); LW1I = LastValue (LW1,1);					// LAST WEEK low
+CW1 = TimeFrameGetPrice("C", inWeekly, -1);	CW1I = LastValue (CW1,1);					// LAST WEEK close
+OW1 = TimeFrameGetPrice("O", inWeekly, -1);	OW1I = LastValue (OW1,1);					// LAST WEEK open
+VW1 = TimeFrameGetPrice("V", inWeekly, -1);	VW1I = LastValue (VW1,1);					// LAST WEEK VOLUME
+CHW = TimeFrameGetPrice("H", inWeekly); CHWI = LastValue (CHW,1); 						// Current WEEK high
+CLW = TimeFrameGetPrice("L", inWeekly); CLWI = LastValue (CLW,1);						// Current WEEK low
+COW = TimeFrameGetPrice("O", inWeekly); COWI = LastValue (COW,1);						// Current WEEK open
+H2W = IIf(CHW>HW1,CHW,HW1);																// HIGHEST 2 MONTHS
+L2W = IIf(CLW<LW1,CLW,LW1);																// LOWEST 2 MONTHS
+WFIBO382 = 0.382*(H2W-L2W);
+WFIBO500 = 0.500*(H2W-L2W);
+WFIBO618 = 0.618*(H2W-L2W);
+W382  =  H2W-WFIBO382;      	W382I = LastValue (W382,1);   							// S1
+W500  =  H2W-WFIBO500;     		W500I = LastValue (W500,1);  							// S2
+W618  =  H2W-WFIBO618;          W618I = LastValue (W618,1);   							// S3
+
+H10B = HHV(H,10);																		// HIGHEST 10 BARS
+L10B = LLV(L,10);																		// LOWEST 10 BARS
+H5B = HHV(H,5);																			// HIGHEST 5 BARS
+L5B = LLV(L,5);																			// LOWEST 5 BARS
+VTBW=VW1/5;																				// AVERAGE VOL 5 BARS
+
+// VUNG GIA NGAY
+
+CHD = TimeFrameGetPrice("H", inDaily);						// Current D high
+CLD = TimeFrameGetPrice("L", inDaily);				 		// Current D low
+CCD = TimeFrameGetPrice("C", inDaily);						// Current D Close
+COD = TimeFrameGetPrice("O", inDaily);						// Current D open
+CVD = TimeFrameGetPrice("V", inDaily);						// Current D Volume
+
+HD1 = TimeFrameGetPrice("H", inDaily,-1);						// LAST D high
+LD1 = TimeFrameGetPrice("L", inDaily,-1);				 		// LAST D low
+CD1 = TimeFrameGetPrice("C", inDaily,-1);						// LAST D Close
+OD1 = TimeFrameGetPrice("O", inDaily,-1);						// LAST D open
+VD1 = TimeFrameGetPrice("V", inDaily,-1);						// LAST D Volume
+
+HD2 = TimeFrameGetPrice("H", inDaily,-2);						// LAST 2D high
+LD2 = TimeFrameGetPrice("L", inDaily,-2);				 		// LAST 2D low
+CD2 = TimeFrameGetPrice("C", inDaily,-2);						// LAST 2D Close
+OD2 = TimeFrameGetPrice("O", inDaily,-2);						// LAST 2D open
+VD2 = TimeFrameGetPrice("V", inDaily,-2);						// LAST 2D Volume
+
+HD3 = TimeFrameGetPrice("H", inDaily,-3);						// LAST 3D high
+LD3 = TimeFrameGetPrice("L", inDaily,-3);				 		// LAST 3D low
+CD3 = TimeFrameGetPrice("C", inDaily,-3);						// LAST 3D Close
+OD3 = TimeFrameGetPrice("O", inDaily,-3);						// LAST 3D open
+VD3 = TimeFrameGetPrice("V", inDaily,-3);						// LAST 3D Volume
+
+HD4 = TimeFrameGetPrice("H", inDaily,-4);						// LAST 4D high
+LD4 = TimeFrameGetPrice("L", inDaily,-4);				 		// LAST 4D low
+CD4 = TimeFrameGetPrice("C", inDaily,-4);						// LAST 4D Close
+OD4 = TimeFrameGetPrice("O", inDaily,-4);						// LAST 4D open
+VD4 = TimeFrameGetPrice("V", inDaily,-4);						// LAST 4D Volume
+
+HD5 = TimeFrameGetPrice("H", inDaily,-5);						// LAST 5D high
+LD5 = TimeFrameGetPrice("L", inDaily,-5);				 		// LAST 5D low
+CD5 = TimeFrameGetPrice("C", inDaily,-5);						// LAST 5D Close
+OD5 = TimeFrameGetPrice("O", inDaily,-5);						// LAST 5D open
+VD5 = TimeFrameGetPrice("V", inDaily,-5);						// LAST 5D Volume
+
+H1=(2*CHD+CCD)/3;
+L1=(2*CLD+CCD)/3;
+C1=(H1+L1+3*CCD)/5;
+
+T0 = C1;
+T1 = Ref(C1,-1);
+
+//CHI SO DONG TIEN T0
+THAYDOITHAMCHIEU0 = ((CCD - CD1)/CD1)*100;
+THAYDOIGIA0 = (((CCD-CLD)-(CHD-CCD))/(CHD-CLD))*abs(THAYDOITHAMCHIEU0);
+THAYDOIGTGD0 = (CCD*CVD*100)/(Ref(MA(C,5),-1)*Ref(MA(V,5),-1));
+DONGTIENTHONGMINH0 = THAYDOIGIA0*THAYDOIGTGD0/100;
+
+//CHI SO DONG TIEN T1
+THAYDOITHAMCHIEU1 = ((CD1 - CD2)/CD2)*100;
+THAYDOIGIA1 = (((CD1-LD1)-(HD1-CD1))/(HD1-LD1))*abs(THAYDOITHAMCHIEU1);
+THAYDOIGTGD1 = (CD1*VD1*100)/(Ref(MA(C,5),-2)*Ref(MA(V,5),-2));
+DONGTIENTHONGMINH1 = THAYDOIGIA1*THAYDOIGTGD1/100;
+
+//CHI SO DONG TIEN T2
+THAYDOITHAMCHIEU2 = ((CD2 - CD3)/CD3)*100;
+THAYDOIGIA2 = (((CD2-LD2)-(HD2-CD2))/(HD2-LD2))*abs(THAYDOITHAMCHIEU2);
+THAYDOIGTGD2 = (CD2*VD2*100)/(Ref(MA(C,5),-3)*Ref(MA(V,5),-3));
+DONGTIENTHONGMINH2 = THAYDOIGIA2*THAYDOIGTGD2/100;
+
+//CHI SO DONG TIEN T3
+THAYDOITHAMCHIEU3 = ((CD3 - CD4)/CD4)*100;
+THAYDOIGIA3 = (((CD3-LD3)-(HD3-CD3))/(HD3-LD3))*abs(THAYDOITHAMCHIEU3);
+THAYDOIGTGD3 = (CD3*VD3*100)/(Ref(MA(C,5),-4)*Ref(MA(V,5),-4));
+DONGTIENTHONGMINH3 = THAYDOIGIA3*THAYDOIGTGD3/100;
+
+//CHI SO DONG TIEN T4
+THAYDOITHAMCHIEU4 = ((CD4 - CD5)/CD5)*100;
+THAYDOIGIA4 = (((CD4-LD4)-(HD4-CD4))/(HD4-LD4))*abs(THAYDOITHAMCHIEU4);
+THAYDOIGTGD4 = (CD4*VD4*100)/(Ref(MA(C,5),-5)*Ref(MA(V,5),-5));
+DONGTIENTHONGMINH4 = THAYDOIGIA4*THAYDOIGTGD4/100;
+
+DONGTIEN5P = DONGTIENTHONGMINH0+DONGTIENTHONGMINH1+DONGTIENTHONGMINH2+DONGTIENTHONGMINH3+DONGTIENTHONGMINH4;
+
+// YEAR ZONE
+numbars = LastValue(Cum(Status("barvisible")));
+hts  = -33.5;
+
+PPY = (LY1 + HY1 + CY1)/3;  	PPYI = LastValue (PPY,1);   								// Pivot
+
+  Plot(PPY, "PPY",colorWhite,styleLine|styleLine|styleNoTitle|styleNoRescale);
+  Plot(COY, "COY",colorBlue,styleLine|styleLine|styleNoRescale|styleNoTitle);
+  Plot(HY1,"HY1",colorYellow,styleLine|styleThick|styleNoRescale|styleNoTitle);
+  Plot(LY1,"LY1",colorYellow,styleLine|styleThick|styleNoRescale|styleNoTitle);
+  Plot(Y382, "Y382",colorLime,styleLine|styleLine|styleNoTitle|styleNoRescale);
+  Plot(Y500, "Y500",colorLightOrange,styleLine|styleLine|styleNoTitle|styleNoRescale);
+  Plot(Y618, "Y618",colorRed,styleLine|styleLine|styleNoTitle|styleNoRescale);
+ 
+  PlotText(" PPY " ,    LastValue(BarIndex())-(numbars/Hts), PPYI, colorWhite);
+  PlotText(" YEAR OPEN " ,     LastValue(BarIndex())-(numbars/Hts), COYI, colorBlue);
+  PlotText(" LASTYEAR HIGHEST " , 	LastValue(BarIndex())-(numbars/Hts), HY1I, colorYellow);
+  PlotText(" LASTYEAR LOWEST " , 	LastValue(BarIndex())-(numbars/Hts), LY1I, colorYellow);
+  PlotText(" Y382 " ,    LastValue(BarIndex())-(numbars/Hts), Y382I, colorLime);
+  PlotText(" Y500 " ,    LastValue(BarIndex())-(numbars/Hts), Y500I, colorLightOrange);
+  PlotText(" Y618 " ,    LastValue(BarIndex())-(numbars/Hts), Y618I, colorRed);
+ 
+// QUARTER ZONE
+numbars = LastValue(Cum(Status("barvisible")));
+hts  = -33.5;
+
+PPQ = (LQ1 + HQ1 + CQ1)/3;  	PPQI = LastValue (PPQ,1);   								// Pivot
+
+  Plot(PPQ, "PPQ",colorWhite,styleLine|styleLine|styleNoTitle|styleNoRescale);
+  Plot(COQ, "COQ",colorBlue,styleLine|styleLine|styleNoRescale|styleNoTitle);
+  Plot(HQ1,"HQ1",colorYellow,styleLine|styleThick|styleNoRescale|styleNoTitle);
+  Plot(LQ1,"LQ1",colorYellow,styleLine|styleThick|styleNoRescale|styleNoTitle);
+  Plot(Q382, "Q382",colorLime,styleLine|styleLine|styleNoTitle|styleNoRescale);
+  Plot(Q500, "Q500",colorLightOrange,styleLine|styleLine|styleNoTitle|styleNoRescale);
+  Plot(Q618, "Q618",colorRed,styleLine|styleLine|styleNoTitle|styleNoRescale);
+ 
+  PlotText(" PPQ " ,    LastValue(BarIndex())-(numbars/Hts), PPQI, colorWhite);
+  PlotText(" QUARTER OPEN " ,     LastValue(BarIndex())-(numbars/Hts), COQI, colorBlue);
+  PlotText(" LASTQUARTER HIGHEST " , 	LastValue(BarIndex())-(numbars/Hts), HQ1I, colorYellow);
+  PlotText(" LASTQUARTER LOWEST " , 	LastValue(BarIndex())-(numbars/Hts), LQ1I, colorYellow);
+  PlotText(" Q382 " ,    LastValue(BarIndex())-(numbars/Hts), Q382I, colorLime);
+  PlotText(" Q500 " ,    LastValue(BarIndex())-(numbars/Hts), Q500I, colorLightOrange);
+  PlotText(" Q618 " ,    LastValue(BarIndex())-(numbars/Hts), Q618I, colorRed);
+  
+ // MONTH ZONE
+numbars = LastValue(Cum(Status("barvisible")));
+hts  = -33.5;
+
+PPM = (LM1 + HM1 + CM1)/3;  	PPMI = LastValue (PPM,1);   								// Pivot
+
+  Plot(PPM, "PPM",colorWhite,styleLine|styleLine|styleNoTitle|styleNoRescale);
+  Plot(COM, "COM",colorBlue,styleLine|styleLine|styleNoRescale|styleNoTitle);
+  Plot(HM1,"HM1",colorYellow,styleLine|styleThick|styleNoRescale|styleNoTitle);
+  Plot(LM1,"LM1",colorYellow,styleLine|styleThick|styleNoRescale|styleNoTitle);
+  Plot(M382, "M382",colorLime,styleLine|styleLine|styleNoTitle|styleNoRescale);
+  Plot(M500, "M500",colorLightOrange,styleLine|styleLine|styleNoTitle|styleNoRescale);
+  Plot(M618, "M618",colorRed,styleLine|styleLine|styleNoTitle|styleNoRescale);
+ 
+  PlotText(" PPM " ,    LastValue(BarIndex())-(numbars/Hts), PPMI, colorWhite);
+  PlotText(" MONTH OPEN " ,     LastValue(BarIndex())-(numbars/Hts), COMI, colorBlue);
+  PlotText(" LASTMONTH HIGHEST " , 	LastValue(BarIndex())-(numbars/Hts), HM1I, colorYellow);
+  PlotText(" LASTMONTH LOWEST " , 	LastValue(BarIndex())-(numbars/Hts), LM1I, colorYellow);
+  PlotText(" M382 " ,    LastValue(BarIndex())-(numbars/Hts), M382I, colorLime);
+  PlotText(" M500 " ,    LastValue(BarIndex())-(numbars/Hts), M500I, colorLightOrange);
+  PlotText(" M618 " ,    LastValue(BarIndex())-(numbars/Hts), M618I, colorRed);
+
+// PHAN NHOM VON HOA
+H40B = HHV(H,40);												// HIGHEST 20 BARS
+MH1 = TimeFrameGetPrice("H", inMonthly,-1);						// LAST 1M high
+dkboloc1 = C/H40B>0.618 AND C/MH1>0.618;
+dkboloc2 = 
+MA(V,5)>=50000 AND MA(V,20)>=50000 AND MA(V,60)>=50000 AND MA(V,120)>=50000 
+AND 
+Ref(V,-1)>=50000 AND Ref(V,-2)>=50000 AND Ref(V,-3)>=50000 AND Ref(V,-4)>=50000 AND Ref(V,-5)>=50000 ;
+boloc = dkboloc1 AND dkboloc2;
+
+Total_Share =GetFnData( "SharesOut" );  // # co phieu luu hanh
+PE =(Close / GetFnData("EPS"));  // PE
+PB =(Close / GetFnData("BookValuePerShare"));  // PB
+Market_Cap = C * Total_Share;  // # von hoa thi truong
+Rouding = Market_Cap/1000000;  // lam tron 1 ty
+NHOMVONHOA =
+WriteIf(Rouding<=0," CHI SO THI TRUONG",
+WriteIf((Rouding>450 AND Rouding<4500 AND BOLOC) OR (Rouding>450 AND Rouding<9000 AND BOLOC AND C<10),"PENNY",
+WriteIf(Rouding>4500 AND Rouding<9000 AND BOLOC,"SMALL",
+WriteIf(Rouding>9000 AND Rouding<45000 AND BOLOC,"MEDIUM",
+WriteIf(Rouding>45000 AND Rouding<90000 AND BOLOC AND C>10,"LARGE",
+WriteIf(Rouding>90000 AND BOLOC AND C>10,"BLUECHIP",""))))));
+
+// DINH NGHIA NEN
+// NEN NGAY
+DBULLISHPINBAR1    	= CCD>=CHD-0.382*(CHD-CLD) AND COD>=CHD-0.382*(CHD-CLD) AND CCD>COD AND (CHD-CLD)>=0.382*ATR(20);								//NEN BUA XANH
+DBULLISHPINBAR2    	= CCD>=CHD-0.382*(CHD-CLD) AND COD>=CHD-0.382*(CHD-CLD) AND CCD<COD AND (CHD-CLD)>=0.382*ATR(20);								//NEN BUA DO
+DBULLISHENGULFING 	= CCD>CHD-0.382*(CHD-CLD) AND COD<CHD-0.618*(CHD-CLD) AND (CHD-CLD)>0.618*ATR(20);												//NEN MARUBOZU TANG
+DBULLISHPINBAR3    	= CCD>=CHD-0.382*(CHD-CLD) AND COD>=CHD-0.382*(CHD-CLD) AND abs(CCD-COD)<0.001 AND (CHD-CLD)>=0.382*ATR(20);					//NEN DOJI TANG	
+
+DSPINNINGCANDLE  	= (CHD-0.618*(CHD-CLD))<((COD+COD)/2)<(CHD-0.382*(CHD-CLD)) AND abs(CCD-COD)<0.236*(CHD-CLD);											//NEN CON QUAY
+
+DBEARISHPINBAR1    	= CCD<=CHD-0.618*(CHD-CLD) AND COD<=CHD-0.618*(CHD-CLD) AND CCD>COD AND (CHD-CLD)>=0.382*ATR(20);								//NEN BUA NGUOC XANH
+DBEARISHPINBAR2    	= CCD<=CHD-0.618*(CHD-CLD) AND COD<=CHD-0.618*(CHD-CLD) AND CCD<COD AND (CHD-CLD)>=0.382*ATR(20);								//NEN BUA NGUOC DO
+DBEARISHENGULFING 	= CCD<CHD-0.618*(CHD-CLD) AND COD>CHD-0.382*(CHD-CLD) AND (CHD-CLD)>0.618*ATR(20);												//NEN MARUBOZU GIAM
+DBEARISHPINBAR3   	= CCD<=CHD-0.618*(CHD-CLD) AND COD<=CHD-0.618*(CHD-CLD) AND abs(CCD-COD)<0.001 AND (CHD-CLD)>=0.382*ATR(20);					//NEN DOJI GIAM
+
+DINHNGHIANENNGAY = 
+WRITEIf(DBULLISHPINBAR1,"NEN BUA XANH",																		
+WRITEIf(DBULLISHPINBAR2,"NEN BUA DO",																		
+WRITEIf(DBULLISHENGULFING,"NEN MARUBOZU TANG",																		
+WRITEIf(DBULLISHPINBAR3,"NEN DOJI TANG",																			
+WRITEIf(DBEARISHPINBAR1,"NEN BUA NGUOC XANH",																	
+WRITEIf(DBEARISHPINBAR2,"NEN BUA NGUOC DO",																		
+WRITEIf(DBEARISHENGULFING,"NEN MARUBOZU GIAM",																	
+WRITEIf(DBEARISHPINBAR3,"NEN DOJI GIAM",																			
+WRITEIf(DSPINNINGCANDLE,"NEN CON QUAY","")))))))));																
+
+// NEN TUAN
+WBULLISHPINBAR1    	= CCD>=CHW-0.382*(CHW-CLW) AND COW>=CHW-0.382*(CHW-CLW) AND CCD>COW;								//NEN BUA XANH
+WBULLISHPINBAR2    	= CCD>=CHW-0.382*(CHW-CLW) AND COW>=CHW-0.382*(CHW-CLW) AND CCD<COW;								//NEN BUA DO
+WBULLISHENGULFING 	= CCD>CHW-0.382*(CHW-CLW) AND COW<CHW-0.618*(CHW-CLW);												//NEN MARUBOZU TANG
+WBULLISHPINBAR3     = CCD>=CHW-0.382*(CHW-CLW) AND COW>=CHW-0.382*(CHW-CLW) AND abs(CCD-COW)<0.001;						//NEN DOJI TANG	
+
+WSPINNINGCANDLE  	= (CHW-0.618*(CHW-CLW))<((COW+CCD)/2)<(CHW-0.382*(CHW-CLW)) AND abs(CCD-COW)<0.236*(CHW-CLW);											//NEN CON QUAY
+
+WBEARISHPINBAR1    	= CCD<=CHW-0.618*(CHW-CLW) AND COW<=CHW-0.618*(CHW-CLW) AND CCD>COW;								//NEN BUA NGUOC XANH
+WBEARISHPINBAR2    	= CCD<=CHW-0.618*(CHW-CLW) AND COW<=CHW-0.618*(CHW-CLW) AND CCD<COW;								//NEN BUA NGUOC DO
+WBEARISHENGULFING 	= CCD<CHW-0.618*(CHW-CLW) AND COW>CHW-0.382*(CHW-CLW);												//NEN MARUBOZU GIAM
+WBEARISHPINBAR3    	= CCD<=CHW-0.618*(CHW-CLW) AND COW<=CHW-0.618*(CHW-CLW) AND abs(CCD-COW)<0.001;						//NEN DOJI GIAM
+
+DINHNGHIANENTUAN = 
+WRITEIf(WBULLISHPINBAR1,"NEN BUA XANH",																		
+WRITEIf(WBULLISHPINBAR2,"NEN BUA DO",																		
+WRITEIf(WBULLISHENGULFING,"NEN MARUBOZU TANG",																		
+WRITEIf(WBULLISHPINBAR3,"NEN DOJI TANG",																			
+WRITEIf(WBEARISHPINBAR1,"NEN BUA NGUOC XANH",																	
+WRITEIf(WBEARISHPINBAR2,"NEN BUA NGUOC DO",																		
+WRITEIf(WBEARISHENGULFING,"NEN MARUBOZU GIAM",																	
+WRITEIf(WBEARISHPINBAR3,"NEN DOJI GIAM",																			
+WRITEIf(WSPINNINGCANDLE,"NEN CON QUAY","")))))))));	
+
+// CHU KY
+//period1 = Param( "period1", 10, 1, 200, 1 );					// CHU KY 10 PHIEN
+//period2 = Param( "period1", 20, 1, 200, 1 );					// CHU KY 20 PHIEN
+//period3 = Param( "period1", 60, 1, 200, 1 );					// CHU KY 60 PHIEN
+period1 = 10;					// CHU KY 10 PHIEN
+period2 = 20;					// CHU KY 20 PHIEN
+period3 = 60;					// CHU KY 60 PHIEN
+
+// TREND
+// XU HUONG 20 PHIEN
+SUPTREND      = C1>=HM1 AND C1>=COM ;																// UPTREND NGAN HAN
+SSIDEWAYUP1   = C1>=HM1 AND C1<=COM ; 																// SIDEWAYUP NGAN HAN CASE1
+SSIDEWAYUP2   = C1<=HM1 AND C1>H2M-MFIBO382 ;														// SIDEWAYUP NGAN HAN CASE2
+SSIDEWAYUP 	  = SSIDEWAYUP1 OR SSIDEWAYUP2 ;
+SSIDEWAY      = C1<=H2M-MFIBO382 AND C1>H2M-MFIBO618;												// SIDEWAY NGAN HAN
+SSIDEWAYDOWN1 = C1<=LM1 AND C1>=COM ;																// SIDEWAYDOWN NGAN HAN CASE1
+SSIDEWAYDOWN2 = C1>=LM1 AND C1<=H2M-MFIBO618 ;														// SIDEWAYDOWN NGAN HAN CASE2
+SSIDEWAYDOWN  = SSIDEWAYDOWN1 OR SSIDEWAYDOWN2 ;
+SDOWNTREND    = C1<=LM1 AND C1<=COM ;																// DOWNTREND NGAN HAN
+
+BREAKUP20P1 = C1>=Ref(H20B,-1) AND C1>=HW1 AND C1>=HD1 AND CCD>=CHD-0.382*(CHD-CLD);							// VUOT DINH 20 PHIEN
+BREAKDOWN20P1 = C1<=Ref(L20B,-1) AND C1<=LW1 AND C1<=LD1 AND CCD<=CHD-0.618*(CHD-CLD);							// PHA DAY 20 PHIEN
+BREAKUP20P1=ExRem(BREAKUP20P1,BREAKDOWN20P1);
+BREAKDOWN20P1=ExRem(BREAKDOWN20P1,BREAKUP20P1);
+
+BREAKUP20P2 = C1>=M618 AND C1>=HW1 AND C1>=HD1 AND CCD>=CHD-0.382*(CHD-CLD);									// PHA VO XU HUONG GIAM 20 PHIEN
+BREAKDOWN20P2 = C1<=M382 AND C1<=LW1 AND C1<=LD1 AND CCD<=CHD-0.618*(CHD-CLD);									// PHA VO XU HUONG TANG 20 PHIEN
+BREAKUP20P2=ExRem(BREAKUP20P2,BREAKDOWN20P1);
+BREAKDOWN20P2=ExRem(BREAKDOWN20P2,BREAKUP20P1);
+
+// XU HUONG 60 PHIEN
+MUPTREND      = C1>=HQ1 AND C1>=COQ ;																// UPTREND TRUNG HAN
+MSIDEWAYUP1   = C1>=HQ1 AND C1<=COQ ; 																// SIDEWAYUP TRUNG HAN CASE1
+MSIDEWAYUP2   = C1<=HQ1 AND C1>=H2Q-QFIBO382 ;														// SIDEWAYUP TRUNG HAN CASE2
+MSIDEWAYUP    = MSIDEWAYUP1 OR MSIDEWAYUP2 ;								
+MSIDEWAY      = C1<=H2Q-QFIBO382 AND C1>=H2Q-QFIBO618;												// SIDEWAY TRUNG HAN
+MSIDEWAYDOWN1 = C1<=LQ1 AND C1>=COQ ;																// SIDEWAYDOWN TRUNG HAN CASE1
+MSIDEWAYDOWN2 = C1>=LQ1 AND C1<=H2Q-QFIBO618 ;														// SIDEWAYDOWN TRUNG HAN CASE2
+MSIDEWAYDOWN  = MSIDEWAYDOWN1 OR MSIDEWAYDOWN2 ;							
+MDOWNTREND    = C1<=LQ1 AND C1<=COQ ;																// DOWNTREND TRUNG HAN
+
+BREAKUP60P1 = C1>=Ref(H60B,-1) AND C1>=HM1 AND C1>=HW1 AND C1>=HD1 AND CCD>=CHD-0.382*(CHD-CLD);				// VUOT DINH 60 PHIEN
+BREAKDOWN60P1 = C1<=Ref(L60B,-1) AND C1<=LM1 AND C1<=LW1 AND C1<=LD1 AND CCD<=CHD-0.618*(CHD-CLD);				// PHA DAY 60 PHIEN
+BREAKUP60P1=ExRem(BREAKUP60P1,BREAKDOWN20P1);
+BREAKDOWN60P1=ExRem(BREAKDOWN60P1,BREAKUP20P1);
+
+BREAKUP60P2 = C1>=Q618 AND C1>=M618 AND C1>=HW1 AND C1>=HD1 AND CCD>=CHD-0.382*(CHD-CLD);							// PHA VO XU HUONG GIAM 60 PHIEN
+BREAKDOWN60P2 = C1<=Q382 AND C1<=M382 AND C1<=LW1 AND C1<=LD1 AND CCD<=CHD-0.618*(CHD-CLD);							// PHA VO XU HUONG TANG 60 PHIEN
+BREAKUP60P2=ExRem(BREAKUP60P2,BREAKDOWN20P1);
+BREAKDOWN60P2=ExRem(BREAKDOWN60P2,BREAKUP20P1);
+
+PlotShapes(IIf(BREAKUP20P1, shapeSquare, shapeNone),colorLime, 0, CLW, Offset=-40);   
+PlotShapes(IIf(BREAKUP20P1, shapeUpArrow, shapeNone),colorLime, 0,CLW, Offset=-35); 
+PlotShapes(IIf(BREAKDOWN20P1, shapeSquare, shapeNone),colorRed, 0, CHW, Offset=40);
+PlotShapes(IIf(BREAKDOWN20P1, shapeDownArrow, shapeNone),colorRed, 0,CHW, Offset=-35);
+
+PlotShapes(IIf(BREAKUP60P1, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(BREAKUP60P1, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);                      
+PlotShapes(IIf(BREAKUP60P1, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45); 
+PlotShapes(IIf(BREAKDOWN60P1, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(BREAKDOWN60P1, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);                      
+PlotShapes(IIf(BREAKDOWN60P1, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
+
+for( i = 0; i < BarCount; i++ )
+{
+if( BREAKUP60P1[i] )
+{
+PlotText( "VUOT DINH 60 PHIEN " + Name() + ": " + Prec(C1[ i ],2) , i, L[ i ], colorGreen, colorWhite );
+}
+if( BREAKDOWN60P1[i] )
+{
+PlotText( "PHA DAY 60 PHIEN " + Name() + ": " + Prec(C1[ i ],2) , i, H[ i ], colorRed, colorWhite );
+}
+}
+
+// TREND
+DINHNGHIAXUHUONG = 																		// TREND
+WriteIf(BREAKUP20P2, "PHA VO XU HUONG GIAM 20 PHIEN",
+WriteIf(BREAKUP20P1, "VUOT DINH 20 PHIEN",
+WriteIf(BREAKUP60P2, "PHA VO XU HUONG GIAM 60 PHIEN",
+WriteIf(BREAKUP60P1, "VUOT DINH 60 PHIEN",
+
+WriteIf(BREAKDOWN20P2, "PHA VO XU HUONG TANG 20 PHIEN",
+WriteIf(BREAKDOWN20P1, "PHA DAY 20 PHIEN",
+WriteIf(BREAKDOWN60P2, "PHA VO XU HUONG TANG 60 PHIEN",
+WriteIf(BREAKDOWN60P1, "PHA DAY 60 PHIEN",
+
+WriteIf(SUPTREND AND MUPTREND,"XU HUONG LEN MANH",
+WriteIf(SUPTREND AND MSIDEWAYUP,"XU HUONG LEN",
+WriteIf(SUPTREND AND MSIDEWAY,"XU HUONG LEN YEU",
+WriteIf(SSIDEWAYUP AND MSIDEWAYUP, "XU HUONG NGANG-LEN",
+WriteIf(SSIDEWAYUP AND MSIDEWAY, "XU HUONG DI NGANG",
+WriteIf(SSIDEWAY AND MSIDEWAYUP, "XU HUONG DI NGANG",
+WriteIf(SSIDEWAY AND MSIDEWAY, "XU HUONG DI NGANG",
+WriteIf(SSIDEWAY AND MSIDEWAYDOWN, "XU HUONG DI NGANG",
+WriteIf(SSIDEWAYDOWN AND MSIDEWAY, "XU HUONG DI NGANG",
+WriteIf(SSIDEWAYDOWN AND MSIDEWAYDOWN, "XU HUONG NGANG-XUONG",
+WriteIf(SDOWNTREND AND MSIDEWAY, "XU HUONG XUONG YEU",
+WriteIf(SDOWNTREND AND MSIDEWAYDOWN, "XU HUONG XUONG",
+WriteIf(SDOWNTREND AND MDOWNTREND, "XU HUONG XUONG MANH","XU HUONG DI NGANG"))))))))))))))))))))); 
+
+// SUPERPOWER
+GTGDTB3PHIEN 		= MA(C1,3)*MA(CVD,3);																// GTGD TRUNG BINH 3 PHIEN
+SUPERPOWER1 = ((V*C1)/(MA(C,10)*MA(V,10)))>=1.382 AND V>=1.382*VTBW;										// SUC MANH DOT BIEN
+SUPERPOWER2 = GTGDTB3PHIEN/Ref(GTGDTB3PHIEN,-2)>=1.382;
+SUPERPOWER =  SUPERPOWER1 OR SUPERPOWER2;
+
+//MOMENTUM STRATERGY
+MOMEN = 
+DBULLISHENGULFING AND C1>M618 AND C1>HD1 AND SUPERPOWER1 AND DONGTIENTHONGMINH0>0
+OR 
+DBULLISHENGULFING AND C1>Q618 AND C1>HD1 AND SUPERPOWER1 AND DONGTIENTHONGMINH0>0;
+MOMEN1 = MOMEN AND H1<HQ1 AND H1<HM1;
+MOMEN2 = 
+MOMEN AND L1>HQ1
+OR 
+MOMEN AND L1>HM1;
+
+PlotShapes(IIf(MOMEN1 , shapeSmallUpTriangle, shapeNone),colorYellow, 0,L, Offset=-20); 
+PlotShapes(IIf(MOMEN2 , shapeSmallUpTriangle, shapeNone),colorYellow, 0,L, Offset=-20); 
+
+//BREAKOUT STRATERGY
+BO1 = 
+DBULLISHENGULFING AND BREAKUP20P2 AND SUPERPOWER1 AND DONGTIENTHONGMINH0>0 ;
+BO2 = 
+DBULLISHENGULFING AND L1<HM1 AND C1>HM1 AND BREAKUP20P1 AND SUPERPOWER1 AND DONGTIENTHONGMINH0>0 
+OR
+DBULLISHENGULFING AND L1<HQ1 AND C1>HQ1 AND BREAKUP60P1 AND SUPERPOWER1 AND DONGTIENTHONGMINH0>0 ;
+
+PlotShapes(IIf(BO1 , shapeSmallUpTriangle, shapeNone),colorOrange, 0,L, Offset=-30); 
+PlotShapes(IIf(BO2 , shapeSmallUpTriangle, shapeNone),colorOrange, 0,L, Offset=-30); 
+
+//SL&TP MOMENTUM/BREAKOUT STRATERGY
+STOPLOSS2 = 0.98*CLW;
+TARGET = C1 + 1.618*(C1-STOPLOSS2);
+
+//SUPPORT STRATERGY
+M1 = M382;		// BUY1
+M2 = M618;   	// BUY2
+BUYONSUPPORT = 
+MSIDEWAYUP AND C1>M2 AND C1<M1 AND DONGTIENTHONGMINH0>0 AND MA(DONGTIEN5P,5)>0
+OR
+MSIDEWAY AND C1>M2 AND C1<M1 AND DONGTIENTHONGMINH0>0 AND MA(DONGTIEN5P,5)>0;	
+
+//B1 = H2M-M618; 		// SELL1
+//B2 = H2M-M500;   		// SELL2
+//SELLONRESISTANCE = SIDEWAYDOWN2 AND B1<C1 AND C1<B2 AND BEARISHCANDLE AND C<WH-0.382*(WH-WL);
+
+//SL&TP SUPPORT STRATERGY
+SL = IIf(LM1>L2W,LM1,L2W);
+STOPLOSS1 = 0.98*SL;   					   													// SL BOS
+TP1Q = COM + QFIBO382;				TP1QI = LastValue (TP1Q,1);   							// TP 1
+TP2Q = COM + QFIBO618;				TP2QI = LastValue (TP2Q,1);   							// TP 2
+
+PlotShapes(IIf(BUYONSUPPORT, shapeSmallUpTriangle, shapeNone),colorWhite, 0,L, Offset=-40); 
+
+//BUY THE DIP
+BTD = DBULLISHENGULFING AND DONGTIENTHONGMINH0>0 AND L1<LQ1 AND L1<M618 AND L1<W618 AND SUPERPOWER1 AND BOLOC;	
+
+PlotShapes(IIf(BTD, shapeSmallUpTriangle, shapeNone),colorRed, 0,L, Offset=-50); 
+
+//BUY STRATERGY
+STRATERGY = WriteIf(BTD, "Mua bat day",WriteIf(BUYONSUPPORT, "Mua vung ho tro",WriteIf(BO1, "Mua pha vo nen gia",WriteIf(BO2, "Mua pha vo dinh",WriteIf(MOMEN1, "Mua theo da (1st)",WriteIf(MOMEN2, "Mua theo da (2nd)",""))))));  //STRATERGY
+BUYSTRATERGY = BUYONSUPPORT OR MOMEN1 OR MOMEN2 OR BO1 OR BO2 OR BTD;
+AB = IIf(BUYONSUPPORT, (M1+M2)/2,IIf(MOMEN1 OR MOMEN2 OR BO1 OR BO2 OR BTD, C1,0));
+ATP1 = IIf(BUYONSUPPORT, TP1Q,IIf(MOMEN1 OR MOMEN2 OR BO1 OR BO2 OR BTD, TARGET,0));
+ATP2 = IIf(BUYONSUPPORT, TP2Q,0);
+//ATP3 = IIf(BOC, TP3Q,0);
+ASL = IIf(BUYONSUPPORT, STOPLOSS1,IIf(MOMEN1 OR MOMEN2 OR BO1 OR BO2 OR BTD, STOPLOSS2,0));
+
+PlotShapes(IIf(AB, shapeHollowSmallCircle, shapeNone),colorRed, 0,ASL, Offset=0); 
+PlotShapes(IIf(AB, shapeHollowSmallCircle, shapeNone),colorLime, 0,ATP1, Offset=0); 
+PlotShapes(IIf(BUYONSUPPORT, shapeHollowSmallCircle, shapeNone),colorLime, 0,ATP2, Offset=0); 
+
+Buy=
+BOLOC
+AND V/VTBW>=0.382 
+AND BUYSTRATERGY
+;
+
+THAYDOITHAMCHIEU = ((C - Ref(C,-1))/Ref(C,-1))*100;
+THAYDOIGIA = (((C-L)-(H-C))/((H-L)+0.00001))*abs(THAYDOITHAMCHIEU);
+THAYDOIGTGD = (C*V*100)/(MA(C,5)*MA(V,5));
+DONGTIENTHONGMINH = THAYDOIGIA*THAYDOIGTGD/100;
+
+/*
+BUY= X AND C1>MH AND C1>PPM AND C1>Q618 AND BULL ;
+SELL= X AND C1<ML AND C1<PPM AND C1<Q382 AND BEAR ;
+
+BUY=ExRem(BUY,SELL);
+SELL=ExRem(SELL,BUY);
+Short=SELL;
+Cover=BUY;
+
+BuyPrice=ValueWhen(BUY,C1);
+SellPrice=ValueWhen(SELL,C1);
+ShortPrice=ValueWhen(Short,C1);
+CoverPrice=ValueWhen(Cover,C1);
+*/
+
+AddColumn(C,"Gia hien tai");
+//AddColumn((C-COY)*100/COY,"% Nam");
+//AddColumn((C-COQ)*100/COQ,"% Quy");
+//AddTextColumn(IndustryID(1),"Nhom Nganh"); 
+//AddTextColumn(NHOMVONHOA,"Nhom Von hoa");
+//AddColumn(((C - Ref(C,-1))/Ref(C,-1))*100 ,"% Thay doi Gia");
+//AddColumn((C*V*100)/(MA(C,5)*MA(V,5)),"% Thay doi GTGD");
+//AddColumn(DONGTIENTHONGMINH,"Chi so Dong tien",1.2,IIf( DONGTIENTHONGMINH > 0, colorGreen, colorRed ));
+AddTEXTColumn(DINHNGHIAXUHUONG,"Danh gia Xu huong");
+AddTextColumn(STRATERGY,"Chien luoc GD");
+//AddTextColumn(ShortTrend,"ShortTrend");
+//AddTextColumn(MidTrend,"MidTrend");
+AddColumn(AB,"Mua TB");
+AddColumn(ASL,"Dung lo");
+AddColumn(ATP1,"Chot lai 1");
+AddColumn(ATP2,"Chot lai 2");
+AddTextColumn(FullName(),"1.Ten Doanh nghiep");
+//AddColumn(ATP3,"Chot lai 3");
+
+AddSummaryRows(16, 1.2,3);
+SetSortColumns(5,1) ;
+Filter = Buy ;
+
+_SECTION_BEGIN("Telegram Alerts - Legacy Method");
+
+
+TelegramAlerts = ParamTrigger("Telegram Alert","Send Alert");
+TelegramAPI_ID = ParamStr("Telegram Bot API Key","1881752544:AAFRjpiwCoPpdEkQg37Xi8nDVok_VmfaQ-0");  //Get the Bot API key via BotFather in Telgram
+TelgramCHAT_ID = ParamStr("Telegram Channel ID","@tradertruongdao_CSVIP1"); //Channel ID example : @marketcalls_in
+
+
+//User Defined Function -> Created using VBscript
+EnableScript("VBScript"); 
+
+<% 
+
+Public Sub Telegram(Message_Text)
+
+
+sAPI_ID = AFL.Var("TelegramAPI_ID")
+sChat_ID = AFL.Var("TelgramCHAT_ID")
+sMSG = Message_Text
+
+'URL to open....
+sUrl = "https://api.telegram.org/bot" & sAPI_ID & "/sendMessage"
+'POST Request to send.
+sRequest = "text=" & sMSG & "&chat_id=" & sChat_ID
+
+
+set oHTTP = CreateObject("Microsoft.XMLHTTP")
+oHTTP.open "POST", sUrl,false
+oHTTP.setRequestHeader "Content-Type", "application/x-www-form-urlencoded"
+oHTTP.setRequestHeader "Content-Length", Len(sRequest)
+oHTTP.send sRequest
+HTTPPost = oHTTP.responseText
+
+
+'Store response 
+'msgbox(objXmlHttpMain.responseText)
+'response.Write (objXmlHttpMain.responseText) 
+
+End Sub  
+
+%> 
+
+tg = GetScriptObject(); 
+
+//ctl=%F0%9F%93%88;
+//cts=%F0%9F%93%89;
+//sl=%F0%9F%94%B5;
+//ss=%F0%9F%94%B4;
+//note=%F0%9F%93%8D;
+//alert=%F0%9F%93%A2;
+//green cirlce  =%F0%9F%9F%A2
+//red square = %F0%9F%9F%A5
+//green square = %F0%9F%9F%A9
+//blue square = %F0%9F%9F%A6
+//purple square = %F0%9F%9F%AA
+
+// LONG/SHORT ZONE
+
+/*
+if (LastValue(ValueWhen(Ref(Buy,-1),BarIndex())==BarIndex()) AND StaticVarGet(Name()+GetChartID()+"buyAlert")==0)
+{
+tg.Telegram("%F0%9F%94%B5 ALERT // CONFIRM TREND LONG " + Name() + " AT " + BuyPrice  +"\n"+ 
+" %F0%9F%93%8D TIME: " +Date());
+StaticVarSet(Name()+ GetChartID() + "buyAlertBar", LastValue(TimeNum()));
+}
+*/
+
+
+if (LastValue(ValueWhen(Ref(BUY,0),BarIndex())==BarIndex()) AND StaticVarGet(Name()+GetChartID()+"buyAlert")==0 )
+{
+tg.Telegram("T2M Autobot Stock " +"\n"+ 
+"\n"+
+
+"%F0%9F%9F%AA " + Name() +"\n"+
+FullName() + " - " + MarketID(1) +"\n"+
+//"Nhom Nganh              " + IcbID(1) +" " +"\n"+
+//"Nhom Von hoa           " + NHOMVONHOA +" " +"\n"+
+"------------" + "\n"+
+
+"Phien ngay " +Now(0)  +"\n"+ 
+"------------" + "\n"+
+
+"Chien luoc                   " +STRATERGY+"\n"+
+"MUA TB                        " + Prec(AB,2)+ " (~2%)"+"\n"+ 
+"Dieu kien                     Gia dong cua >= " + Prec(H-0.382*(H-L),2) + "\n"+ 
+"Dung lo                        " + Prec(ASL,2) + " ("+Prec(((ASL - C)/C),2)*100+"%)"+"\n"+
+"Chot loi 1                     " + Prec(ATP1,2) + " ("+Prec(((ATP1 - C)/C),2)*100+"%)"+"\n"+
+"Chot loi 2                     " + Prec(ATP2,2) + " ("+Prec(((ATP2 - C)/C),2)*100+"%)"+"\n"+
+//"CHOT LOI 3 :                    " + Prec(ATP3,2) + " ("+Prec(((ATP3 - C)/C),2)*100+"%)"+"\n"+
+"------------" + "\n"+
+
+"Gia hien tai                 " + C + " ("+Prec(((C - Ref(C,-1))/Ref(C,-1)),2)*100+"%)"+"\n"+
+//"Chi so Dong tien        " + Prec(DONGTIENTHONGMINH,2) + "%" + "\n"+
+"Khop lenh (kCP)         " + Prec(Volume/1000,2) +"\n"+
+"Xu huong                     " + DINHNGHIAXUHUONG +"\n"+ 
+//"XU HUONG NGAN HAN :      " + STrend +"\n"+ 
+//"XU HUONG TRUNG HAN :    " + MTrend +"\n"+ 
+"%Nam " +Year()+  "                " + Prec((C-COY)*100/COY,2) + "%"+"\n"+ 
+"%Quy " +QUY+  "                     " + Prec((C-COQ)*100/COQ,2) + "%" +"\n"+ 
+"------------" + "\n"+
+
+"Website: https://t2m.vn/" +"\n"
+//"tradertruongdao" +"\n"+
+//"mobile 0888 213 688 " +"\n"
+)
+;
+StaticVarSet(Name()+ GetChartID() + "buyAlertBar", LastValue(TimeNum()));
+}
+
+
+if (LastValue(TimeNum()) == StaticVarGet(Name()+GetChartID()+"buyAlertBar"))
+
+StaticVarSet(Name()+GetChartID()+"buyAlert",1); //alert was triggered, no more alerts on this bar
+else
+StaticVarSet(Name()+GetChartID()+"buyAlert",0); // new bar formed, and alerts can be trigered.
+
+_SECTION_END();
