@@ -12,10 +12,6 @@ def run_data():
     warnings.simplefilter("ignore", category=FutureWarning)
     pd.options.mode.chained_assignment = None
 
-    # #### Import Data
-
-    # In[357]:
-
     # Đọc name map để chuyển đỏi các tên thành dạng full
     name_map = pd.read_excel(
         "data/t2m_classification.xlsx", sheet_name="name_map"
@@ -31,8 +27,6 @@ def run_data():
         "data/t2m_classification.xlsx", sheet_name="name_map"
     ).drop(columns=["order", "full_name"], axis=1)
     group_map_dict = group_map.set_index("code")["group"].to_dict()
-
-    # In[358]:
 
     # Đọc toàn bộ các file csv được xuất ra từ ami eod
     eod_item_dict = {}
@@ -154,8 +148,6 @@ def run_data():
         df["net_volume"] = df["buy_volume"] + df["sell_volume"]
         df["net_value"] = df["buy_value"] + df["sell_value"]
 
-    # In[359]:
-
     # Tạo một date_series bao gồm khoảng ngày tính toán eod
     date_series = pd.DataFrame(eod_index_dict["VNINDEX"]["date"]).rename(
         columns={0: "date"}
@@ -174,8 +166,6 @@ def run_data():
 
     # Tạo 1 khung thời gian trong ngày từ 9h15 tới hết giờ
     itd_series = pd.DataFrame(time_series_list[3:]).rename(columns={0: "date"})
-
-    # In[360]:
 
     # Đọc toàn bộ các file csv được xuất ra từ ami itd
     itd_item_dict = {}
@@ -250,8 +240,6 @@ def run_data():
         if k in index_name_df["item"].tolist()
     }
 
-    # In[361]:
-
     def calculate_time_percent(time):
         start_time_am = dt.time(9, 00)
         end_time_am = dt.time(11, 30)
@@ -295,8 +283,6 @@ def run_data():
     time_percent["percent"] = time_percent["percent"].apply(lambda x: x if x < 1 else 1)
     current_time_percent = time_percent["percent"].iloc[0]
 
-    # In[362]:
-
     # Tạo bảng thời gian update
     def get_update_time(start_time_am, end_time_am, start_time_pm, end_time_pm):
         if (dt.datetime.now()).weekday() <= 4:
@@ -324,9 +310,6 @@ def run_data():
     ).rename(columns={0: "date"})
 
     # #### Đường trung bình
-
-    # In[363]:
-
     # Tính toán các đường trung bình và các đường MA
     eod_stock_dict = {
         k: v.sort_values(by=["date"], ascending=True).reset_index(drop=True)
@@ -389,8 +372,6 @@ def run_data():
         for k, v in eod_stock_dict.items()
     }
 
-    # In[364]:
-
     # Gán các đường trung bình và MA sang bảng dữ liệu ITD
     for stock, df in itd_stock_dict.items():
         temp_data = eod_stock_dict[stock][
@@ -443,8 +424,6 @@ def run_data():
         for k, v in itd_stock_dict.items()
     }
 
-    # In[365]:
-
     # Xoá các cổ phiếu chưa có giao dịch trong ngày
     delete_stock = []
     for stock, df in eod_stock_dict.items():
@@ -478,8 +457,6 @@ def run_data():
         df["cap"] = df["cap"][::-1].rolling(window=20).mean()[::-1]
 
     # #### Phân nhóm cổ phiếu
-
-    # In[366]:
 
     stock_classification = pd.read_excel("data/t2m_classification.xlsx")
     stock_classification = stock_classification[
@@ -537,8 +514,6 @@ def run_data():
     stock_classification = pd.concat(
         [stock_classification, vonhoa_classification_df["marketcap_group"]], axis=1
     )
-
-    # In[367]:
 
     # Convert DataFrame columns to dictionaries for quick access
     stock_by_industry = stock_classification.set_index("stock")[
@@ -627,16 +602,12 @@ def run_data():
             if stock in itd_stock_dict
         }
 
-    # In[368]:
-
     group_stock_list = (
         ["all_stock"]
         + stock_classification["industry_name"].unique().tolist()
         + stock_classification["industry_perform"].unique().tolist()
         + stock_classification["marketcap_group"].unique().tolist()
     )
-
-    # In[369]:
 
     # Tạo bảng để slicer các nhóm cổ phiếu
     group_slicer_df = pd.DataFrame(group_stock_list).rename(columns={0: "name"})
@@ -645,8 +616,6 @@ def run_data():
     group_slicer_df["name"] = group_slicer_df["name"].map(name_map_dict)
 
     # #### Biểu đồ cấu trúc sóng
-
-    # In[370]:
 
     import pandas as pd
 
@@ -685,19 +654,15 @@ def run_data():
             # Sort the DataFrame by date and limit to the last 60 entries
             stock_dict[group_name] = group_trends.sort_values(
                 "date", ascending=False
-            ).iloc[:960]
+            ).iloc[:60]
 
         return stock_dict
-
-    # In[371]:
 
     # Tính toán các biểu đồ MS cho các nhóm cổ phiếu
     all_stock_ms = transform_ms(eod_all_stock)
     industry_name_ms = transform_ms(eod_industry_name)
     industry_perform_ms = transform_ms(eod_industry_perform)
     marketcap_group_ms = transform_ms(eod_marketcap_group)
-
-    # In[372]:
 
     # Gộp tất cả biểu đồ MS vào 1 bảng
     market_ms = pd.DataFrame()
@@ -717,14 +682,10 @@ def run_data():
 
     # - Điểm dòng tiền EOD
 
-    # In[373]:
-
     eod_stock_dict = {
         k: v.iloc[:60].reset_index(drop=True) for k, v in eod_stock_dict.items()
     }
     date_series = date_series.iloc[:60]
-
-    # In[374]:
 
     def score_calculation(df):
         try:
@@ -743,8 +704,6 @@ def run_data():
         except ZeroDivisionError:
             # return 0
             return ((df["volume"] * df["close"]) / (df["ma5_prev"] * df["ma5_V"])) / 100
-
-    # In[375]:
 
     # Tính toán các cột cần thiết để lọc danh sách cổ phiếu dòng tiền
     raw_eod_score_dict = {}
@@ -833,8 +792,6 @@ def run_data():
         stock_classification["stock"].isin(eod_score_dict.keys())
     ].reset_index(drop=True)
 
-    # In[376]:
-
     for stock in eod_score_dict.keys():
         nganh = stock_classification_filtered[
             stock_classification_filtered["stock"] == stock
@@ -866,8 +823,6 @@ def run_data():
         eod_score_dict[stock]["t2m_select"] = stock_classification_filtered[
             stock_classification_filtered["stock"] == stock
         ]["t2m_select"].item()
-
-    # In[377]:
 
     group_score = date_series.copy()
     ranking_group = date_series.copy()
@@ -908,8 +863,6 @@ def run_data():
         k: v.drop(columns=["raw_score", "rank_t0_prev", "rank_prev", "top_check"])
         for k, v in eod_score_dict.items()
     }
-
-    # In[378]:
 
     # Tạo bảng tổng hợp điểm t0 của tất cả cổ phiếu
     eod_score_df = pd.DataFrame(stock_classification_filtered["stock"])
@@ -982,8 +935,6 @@ def run_data():
 
     # - Điểm dòng tiền ITD
 
-    # In[379]:
-
     # Giả định date_series và itd_stock_dict đã được định nghĩa
     hsx_itd_start = pd.Timestamp(
         date_series["date"].iloc[0].replace(hour=9, minute=15, second=0, microsecond=0)
@@ -1026,8 +977,6 @@ def run_data():
 
         df["raw_score"] = score_calculation(df)
 
-    # In[380]:
-
     for stock in itd_score_dict.keys():
         nganh = stock_classification_filtered[
             stock_classification_filtered["stock"] == stock
@@ -1057,8 +1006,6 @@ def run_data():
             stock_classification_filtered["stock"] == stock
         ]["t2m_select"].item()
 
-    # In[381]:
-
     itd_score_dict = {
         k: v[
             [
@@ -1082,8 +1029,6 @@ def run_data():
     # #### Điểm dòng tiền nhóm cổ phiếu
 
     # - Các hàm tính toán
-
-    # In[382]:
 
     # Chỉnh sửa lại điểm dòng tiền t0 cho từng cổ phiếu với tác động của độ rộng từng nhóm
     def adjust_score_by_breath(t0_score, ratio_column):
@@ -1168,15 +1113,11 @@ def run_data():
 
     # - Dòng tiền vào nhóm cổ phiếu EOD
 
-    # In[383]:
-
     # Loại bỏ các giá trị điểm đột biến của các cổ phiếu khi đóng góp vào điểm dòng tiền ngành
     apply_smooth_score(eod_industry_name, "industry_name", "eod")
     apply_smooth_score(eod_industry_perform, "industry_perform", "eod")
     apply_smooth_score(eod_marketcap_group, "marketcap_group", "eod")
     apply_smooth_score(eod_all_stock, "all_stock", "eod")
-
-    # In[384]:
 
     # Tính độ rộng cho từng phiên phục vụ cho việc điều chỉnh điểm dòng tiền
     temp_df = date_series.copy()
@@ -1257,8 +1198,6 @@ def run_data():
             df["t0_all_stock"], eod_market_breath["all_stock"]
         )
 
-    # In[385]:
-
     # Tạo bảng dữ liệu điểm dòng tiền cho các nhóm cổ phiếu
     eod_group_score_df = date_series.copy()
 
@@ -1310,15 +1249,11 @@ def run_data():
 
     # - Dòng tiền vào nhóm cổ phiếu ITD
 
-    # In[386]:
-
     # Loại bỏ các giá trị điểm đột biến của cá cổ phiếu khi đóng góp vào điểm dòng tiền ngành
     apply_smooth_score(itd_industry_name, "industry_name", "itd")
     apply_smooth_score(itd_industry_perform, "industry_perform", "itd")
     apply_smooth_score(itd_marketcap_group, "marketcap_group", "itd")
     apply_smooth_score(itd_all_stock, "all_stock", "itd")
-
-    # In[387]:
 
     # Tính độ rộng cho từng phiên phục vụ cho việc điều chỉnh điểm dòng tiền
     temp_df = time_series.copy()
@@ -1410,8 +1345,6 @@ def run_data():
             df["t0_all_stock"], itd_market_breath["all_stock"]
         )
 
-    # In[388]:
-
     # Tạo bảng dữ liệu điểm dòng tiền cho các nhóm cổ phiếu
     itd_group_score_df = time_series.copy()
     current_stock_list = list(itd_score_dict.keys())
@@ -1472,8 +1405,6 @@ def run_data():
     # #### Hệ số thanh khoản cho nhóm cổ phiếu
 
     # - Hệ số thanh khoản nhóm cổ phiếu EOD
-
-    # In[389]:
 
     eod_group_liquidity_df = date_series.copy()
 
@@ -1536,8 +1467,6 @@ def run_data():
     eod_group_liquidity_df = eod_group_liquidity_df.iloc[:20]
 
     # - Hệ số thanh khoản nhóm cổ phiếu ITD
-
-    # In[390]:
 
     itd_group_liquidity_df = (
         time_series.copy().sort_values("date").reset_index(drop=True)
@@ -1661,8 +1590,6 @@ def run_data():
 
     # #### Xếp hạng các nhóm cổ phiếu
 
-    # In[391]:
-
     # Tạo bảng xếp hạng cho các nhóm cổ phiếu
     def create_ranking_df(score_df):
         socre_dict = {}
@@ -1732,8 +1659,6 @@ def run_data():
         industry_perform_ranking, on="date", how="left"
     ).merge(marketcap_group_ranking, on="date", how="left")
 
-    # In[392]:
-
     group_score_ranking_melted = pd.DataFrame()
     for column in group_score_ranking.columns[1:]:
         temp_df = group_score_ranking[["date", column]]
@@ -1752,8 +1677,6 @@ def run_data():
 
     # - Gộp bảng hệ số thanh khoản và dòng tiền của các nhóm cổ phiếu EOD
 
-    # In[393]:
-
     # Gộp bảng hệ số thanh khoản và dòng tiền của các nhóm cổ phiếu EOD
     eod_score_liquidity_df = date_series.copy()
     for column in eod_group_liquidity_df.columns[1:]:
@@ -1762,8 +1685,6 @@ def run_data():
         eod_score_liquidity_df[f"score_{column}"] = eod_group_score_df[column]
 
     eod_score_liquidity_df = eod_score_liquidity_df.iloc[:20]
-
-    # In[394]:
 
     eod_group_liquidity_melted = eod_group_liquidity_df.iloc[:20].melt(
         id_vars=["date"], var_name="group_name", value_name="value"
@@ -1786,8 +1707,6 @@ def run_data():
 
     # - Gộp bảng hệ số thanh khoản và dòng tiền của các nhóm cổ phiếu ITD
 
-    # In[395]:
-
     # Gộp bảng hệ số thanh khoản và dòng tiền của các nhóm cổ phiếu ITD
     itd_score_liquidity_df = time_series.copy().reset_index(drop=True)
     for column in itd_group_liquidity_df.columns[1:]:
@@ -1801,8 +1720,6 @@ def run_data():
     itd_score_liquidity_df = itd_series.merge(
         itd_score_liquidity_df, on="date", how="left"
     )
-
-    # In[396]:
 
     # Gộp thành bảng dọc để dùng slicer
     itd_group_liquidity_df = itd_series.merge(
@@ -1828,8 +1745,6 @@ def run_data():
     itd_score_liquidity_melted["group_name"] = itd_score_liquidity_melted[
         "group_name"
     ].map(name_map_dict)
-
-    # In[397]:
 
     # Tạo bảng giá trị cuối của dòng tiền và thanh khoản
     itd_score_liquidity_last = pd.concat(
@@ -1878,8 +1793,6 @@ def run_data():
 
     # #### Dòng tiền trong tuần và trong tháng
 
-    # In[398]:
-
     def fill_month_flow(series):
         new_series = series.copy()
         for i in range(len(series) - 1):
@@ -1895,8 +1808,6 @@ def run_data():
 
     # - Tính toán cho từng cổ phiếu
 
-    # In[399]:
-
     stock_score_df = date_series.copy()
     all_stock_list = stock_classification_filtered["stock"].tolist()
 
@@ -1907,8 +1818,6 @@ def run_data():
     stock_score_df["month"] = stock_score_df["date"].dt.strftime("%m-%Y")
     stock_score_df["week_day"] = stock_score_df["date"].dt.day_name()
     stock_score_df["day_num"] = stock_score_df["date"].dt.day
-
-    # In[400]:
 
     # Tạo bảng dữ liệu theo tuần
     week_day_index = {
@@ -1972,8 +1881,6 @@ def run_data():
     stock_score_week["week_day"] = stock_score_week["week_day"].map(week_day_dict)
     stock_score_week = stock_score_week.sort_values("day_index")
 
-    # In[401]:
-
     # Tạo bảng dữ liệu theo tháng
     month_score_dict = {}
     for i in range(2):
@@ -2031,8 +1938,6 @@ def run_data():
     )
 
     # - Tính toán cho các nhóm cổ phiếu
-
-    # In[402]:
 
     # Tạo bảng dữ liệu theo tuần
     week_day_index = {
@@ -2099,8 +2004,6 @@ def run_data():
     group_score_week["week_day"] = group_score_week["week_day"].map(week_day_dict)
     group_score_week = group_score_week.sort_values("day_index")
 
-    # In[403]:
-
     # Tạo bảng dữ liệu theo tháng
     month_score_dict = {}
     for i in range(2):
@@ -2160,8 +2063,6 @@ def run_data():
 
     # #### Chỉ số kĩ thuật
 
-    # In[404]:
-
     def calculate_ta_df(price_df):
         ta_df = price_df[
             ["stock", "date", "open", "high", "low", "close", "volume"]
@@ -2171,8 +2072,6 @@ def run_data():
         ta_df["quarter"] = ta_df["date"].dt.to_period("Q")
         ta_df["year"] = ta_df["date"].dt.to_period("Y")
         return ta_df
-
-    # In[405]:
 
     def calculate_candle_ta_df(ta_df, input_type):
         ta_df_copy = ta_df.copy()
@@ -2260,8 +2159,6 @@ def run_data():
                         )
 
         return ta_df_copy
-
-    # In[406]:
 
     def calculate_fibo_ta_df(ta_df, input_type):
         ta_df_copy = ta_df.copy()
@@ -2391,8 +2288,6 @@ def run_data():
 
         return ta_df_copy
 
-    # In[407]:
-
     def calculate_pivot_ta_df(ta_df, input_type):
         ta_df_copy = ta_df.copy()
 
@@ -2491,8 +2386,6 @@ def run_data():
 
         return ta_df_copy
 
-    # In[408]:
-
     def calculate_ma_ta_df(ta_df, input_type):
         ta_df_copy = ta_df.copy()
 
@@ -2546,8 +2439,6 @@ def run_data():
             ta_df_copy["from_year_ma480"] = ta_df_copy["close"] - ta_df_copy["ma480"]
 
         return ta_df_copy
-
-    # In[409]:
 
     def transform_ta_df(ta_df, ta_name):
         df_list = []
@@ -2669,8 +2560,6 @@ def run_data():
 
     # - Tính toán chỉ số kĩ thuật cho index
 
-    # In[410]:
-
     ta_index_df = pd.DataFrame()
     for index, df in eod_index_dict.items():
         temp_ta_dict = concat_ta_df(df, "index")
@@ -2679,8 +2568,6 @@ def run_data():
         ta_index_df = pd.concat([ta_index_df, temp_ta_index_df], axis=0)
 
     # - Tính toán chỉ số kĩ thuật cho cổ phiếu
-
-    # In[411]:
 
     ta_stock_df = pd.DataFrame()
     ta_stock_dict = {}
@@ -2698,8 +2585,6 @@ def run_data():
 
     # - Bảng hiển thị 5 chỉ số dạng Card
 
-    # In[412]:
-
     index_card_dict = {}
     for index, df in eod_index_dict.items():
         df["change_value"] = df["close"][::-1].diff()[::-1]
@@ -2715,8 +2600,6 @@ def run_data():
     )
 
     # - Dữ liệu cho bảng thông tin chung
-
-    # In[413]:
 
     # Hàm tính độ rộng thị trường
     up_count, up_value, up_volume = 0, 0, 0
@@ -2759,8 +2642,6 @@ def run_data():
 
     # - Ghép bảng vẽ biểu đồ đường cho 5 chỉ số index
 
-    # In[435]:
-
     temp_df1 = pd.DataFrame(eod_index_dict["VNINDEX"]["date"])
     for index, df in eod_index_dict.items():
         temp_df1[index] = df["close"]
@@ -2770,15 +2651,13 @@ def run_data():
     )
 
     index_price_chart_df = pd.DataFrame()
-    for time_span, name in zip([20, 60, 120, 240], ["1M", "3M", "6M", "1Y"]):
+    for time_span, name in zip([20, 50, 100], ["1M", "3M", "6M"]):
         for index_name in temp_df1["index_name"].unique():
             temp_df2 = temp_df1.loc[temp_df1["index_name"] == index_name].iloc[
                 :time_span
             ]
             temp_df2["time_span"] = name
             index_price_chart_df = pd.concat([index_price_chart_df, temp_df2])
-
-    # In[415]:
 
     # Tính bảng chỉ số tâm lý
     market_sentiment = time_series.copy()
@@ -2821,8 +2700,6 @@ def run_data():
     market_sentiment = itd_series.merge(market_sentiment, on="date", how="left")
 
     # - Khối ngoại và tự doanh
-
-    # In[416]:
 
     # Tạo dữ liệu mua bán phiên hiện tại khối ngoại và tự doanh
     def calculate_nn_td_buy_sell(index_name):
@@ -2926,8 +2803,6 @@ def run_data():
     nn_td_20p_df = pd.concat(
         [nn_td_20p_df_hsx, nn_td_20p_df_hnx, nn_td_20p_df_upcom], axis=0
     )
-
-    # In[417]:
 
     def create_nn_td_top_stock(stock_dict):
         today = date_series["date"][0]
@@ -3159,8 +3034,6 @@ def run_data():
 
     # - Dữ liệu top 10 cổ phiếu tiền vào và tiền ra
 
-    # In[418]:
-
     market_top_10 = (
         eod_score_df[
             [
@@ -3204,8 +3077,6 @@ def run_data():
     # #### Page 2: Dòng tiền thị trường
 
     # - Tính toán độ rộng của tất cả nhóm cổ phiếu trong phiên T0
-
-    # In[419]:
 
     # Hàm tính độ rộng thị trường
     def calculate_breadth(name, stock_list):
@@ -3286,16 +3157,13 @@ def run_data():
     ].drop(columns=["group", "order"])
     industry_breath_df = industry_breath_df.merge(temp_df, on="name", how="inner")
 
-    # In[420]:
-
     # Thêm cột thứ tự vào bảng liquid các ngành
     itd_score_liquidity_last = itd_score_liquidity_last.merge(
         temp_df, on="name", how="left"
     )
     market_breath_df = market_breath_df.merge(temp_df, on="name", how="left")
 
-    # In[421]:
-
+    # Tạo bảng chỉ số dòng tiền T0 tới T5
     group_score_df_5p = eod_group_score_df.iloc[:5, :-4]
     group_score_df_5p["id"] = ["T-0", "T-1", "T-2", "T-3", "T-4"]
     group_score_df_5p = (
@@ -3315,8 +3183,6 @@ def run_data():
     group_score_df_5p["name"] = group_score_df_5p["name"].map(name_map_dict)
 
     # - Bảng xếp hạng 23 ngành theo thứ tự từ trên xuống dưới
-
-    # In[422]:
 
     full_industry_ranking = eod_group_score_df[
         [
@@ -3370,8 +3236,6 @@ def run_data():
 
     # - Biểu đồ đường thể hiện index các nhóm cổ phiếu
 
-    # In[423]:
-
     def calculate_index(stock_group, name):
         price_index_date_series_copy = copy.deepcopy(price_index_date_series)
 
@@ -3395,8 +3259,6 @@ def run_data():
         )
 
         return price_index_date_series_copy["index_value"]
-
-    # In[434]:
 
     # Lấy ra một date_series bao gồm năm nay và 2 năm trước
     price_index_date_series = pd.DataFrame(eod_index_dict["VNINDEX"]["date"])
@@ -3425,7 +3287,7 @@ def run_data():
 
     # Lặp lại thành các khung thời gian
     group_stock_price_index = pd.DataFrame()
-    for time_span, name in zip([20, 60, 120, 240], ["1M", "3M", "6M", "1Y"]):
+    for time_span, name in zip([20, 50, 100], ["1M", "3M", "6M"]):
         for index_name in temp_df1["group_name"].unique():
             temp_df2 = temp_df1.loc[temp_df1["group_name"] == index_name].iloc[
                 :time_span
@@ -3434,8 +3296,6 @@ def run_data():
             group_stock_price_index = pd.concat([group_stock_price_index, temp_df2])
 
     # - Biểu đồ diễn biến xếp hạng của nhóm cổ phiếu trong 20p
-
-    # In[425]:
 
     group_score_ranking_melted = group_score_ranking.iloc[:20].melt(
         id_vars=["date"], var_name="group_name", value_name="value"
@@ -3446,8 +3306,6 @@ def run_data():
     ].map(name_map_dict)
 
     # - Top cổ phiếu tích cực trong nhóm
-
-    # In[426]:
 
     group_stock_top_10_df = pd.DataFrame()
 
@@ -3502,8 +3360,6 @@ def run_data():
 
     # - Biểu đồ giá cổ phiếu
 
-    # In[433]:
-
     temp_df1 = pd.DataFrame(eod_index_dict["VNINDEX"]["date"])
     for stock in stock_classification_filtered["stock"].tolist():
         temp_df1[stock] = eod_all_stock["all_stock"][stock]["close"]
@@ -3512,8 +3368,8 @@ def run_data():
 
     # Pre-compute unique stocks and time spans
     unique_stocks = temp_df1["stock"].unique()
-    time_spans = [20, 60, 120, 240]
-    names = ["1M", "3M", "6M", "1Y"]
+    time_spans = [20, 50]
+    names = ["1M", "3M"]
 
     # Using groupby for efficient manipulation
     result_list = []
@@ -3529,8 +3385,6 @@ def run_data():
 
     # - Biểu đồ dòng tiền và thanh khoản T0
 
-    # In[428]:
-
     stock_liquidty_score_t0 = pd.DataFrame()
     for stock, df in itd_score_dict.items():
         temp_df = itd_series.merge(df, on="date", how="left")
@@ -3544,8 +3398,6 @@ def run_data():
         )
 
     # - Diễn biến xếp hạng dòng tiền cổ phiếu, tương quan dòng tiền, hệ số thanh khoản
-
-    # In[429]:
 
     stock_score_power_df = pd.DataFrame()
     for stock, df in eod_score_dict.items():
@@ -3573,8 +3425,6 @@ def run_data():
         stock_score_power_df = pd.concat([stock_score_power_df, temp_df], axis=0)
 
     # #### Page 5: Bộ lọc cổ phiếu
-
-    # In[430]:
 
     stock_candle_df = pd.DataFrame(
         {
@@ -3719,365 +3569,7 @@ def run_data():
         axis=1,
     )
 
-    # #### Báo cáo hàng ngày
-
-    # In[431]:
-
-    from math import ceil, floor
-
-    daily_report_df = pd.DataFrame(columns=["name", "value"])
-    daily_report_df = daily_report_df.append(
-        {"name": "report_datetime", "value": update_time["date"].iloc[0][10:]},
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {"name": "report_date", "value": update_time["date"].iloc[0][10:20]},
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "market_sentiment",
-            "value": market_sentiment["sentiment"][market_sentiment.last_valid_index()],
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "liquidity",
-            "value": f"{(itd_score_liquidity_last[itd_score_liquidity_last['name']=='Thị trường']['liquidity'].iloc[0]*100).round(2)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "vnindex_close",
-            "value": index_card_df[index_card_df["stock"] == "VNINDEX"]["close"].item(),
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "vnindex_change_percent",
-            "value": f"{(index_card_df[index_card_df['stock'] == 'VNINDEX']['change_percent'].item() * 100).round(2):+.2f}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "vnindex_change_value",
-            "value": f"{index_card_df[index_card_df['stock'] == 'VNINDEX']['change_value'].item().round(2):+.2f}",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "market_volume",
-            "value": f"{int(market_info_df['volume'].sum()):,} cổ phiếu",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {"name": "market_value", "value": f"{int(market_info_df['value'].sum()):,} tỷ"},
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "%_tang_gia",
-            "value": f"{int(market_info_df[market_info_df['name']=='Tăng giá']['count']/market_info_df['count'].sum().item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "%_giam_gia",
-            "value": f"{int(market_info_df[market_info_df['name']=='Giảm giá']['count']/market_info_df['count'].sum().item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "%_khong_doi",
-            "value": f"{int(market_info_df[market_info_df['name']=='Không đổi']['count']/market_info_df['count'].sum().item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "vn30f1m_close",
-            "value": index_card_df[index_card_df["stock"] == "VN30F1M"]["close"].item(),
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "vn30f1m_change_value",
-            "value": f"{index_card_df[index_card_df['stock'] == 'VN30F1M']['change_value'].item().round(2):+.2f}",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "vn30f1m_volume",
-            "value": f"{index_card_df[index_card_df['stock']=='VN30F1M']['volume'].item():,} hợp đồng",
-        },
-        ignore_index=True,
-    )
-
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "score_hsA",
-            "value": f"{itd_score_liquidity_last[itd_score_liquidity_last['name']=='Hiệu suất A']['score'].item():+.2f}",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "liquidity_hsA",
-            "value": f"{(itd_score_liquidity_last[itd_score_liquidity_last['name']=='Hiệu suất A']['liquidity'].item()*100).round(2)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "inflow_hsA",
-            "value": f"{ceil((market_breath_df[market_breath_df['name']=='Hiệu suất A']['in_flow'].item()/market_breath_df[market_breath_df['name']=='Hiệu suất A'][['in_flow','out_flow']].sum(axis=1)).item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "outflow_hsA",
-            "value": f"{floor((market_breath_df[market_breath_df['name']=='Hiệu suất A']['out_flow'].item()/market_breath_df[market_breath_df['name']=='Hiệu suất A'][['in_flow','out_flow']].sum(axis=1)).item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "top_group_hsA",
-            "value": f"dòng tiền mạnh nhất là {itd_score_liquidity_last[itd_score_liquidity_last['group']=='A'].sort_values('score', ascending=False)['name'].iloc[:2].str.cat(sep=', ')} \
-                                                                                và yếu nhất là {itd_score_liquidity_last[itd_score_liquidity_last['group']=='A'].sort_values('score')['name'].iloc[:2].str.cat(sep=', ')}",
-        },
-        ignore_index=True,
-    )
-
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "score_hsB",
-            "value": f"{itd_score_liquidity_last[itd_score_liquidity_last['name']=='Hiệu suất B']['score'].item():+.2f}",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "liquidity_hsB",
-            "value": f"{(itd_score_liquidity_last[itd_score_liquidity_last['name']=='Hiệu suất B']['liquidity'].item()*100).round(2)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "inflow_hsB",
-            "value": f"{ceil((market_breath_df[market_breath_df['name']=='Hiệu suất B']['in_flow'].item()/market_breath_df[market_breath_df['name']=='Hiệu suất B'][['in_flow','out_flow']].sum(axis=1)).item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "outflow_hsB",
-            "value": f"{floor((market_breath_df[market_breath_df['name']=='Hiệu suất B']['out_flow'].item()/market_breath_df[market_breath_df['name']=='Hiệu suất B'][['in_flow','out_flow']].sum(axis=1)).item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "top_group_hsB",
-            "value": f"dòng tiền mạnh nhất là {itd_score_liquidity_last[itd_score_liquidity_last['group']=='B'].sort_values('score', ascending=False)['name'].iloc[:2].str.cat(sep=', ')} \
-                                                                                và yếu nhất là {itd_score_liquidity_last[itd_score_liquidity_last['group']=='B'].sort_values('score')['name'].iloc[:2].str.cat(sep=', ')}",
-        },
-        ignore_index=True,
-    )
-
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "score_hsC",
-            "value": f"{itd_score_liquidity_last[itd_score_liquidity_last['name']=='Hiệu suất C']['score'].item():+.2f}",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "liquidity_hsC",
-            "value": f"{(itd_score_liquidity_last[itd_score_liquidity_last['name']=='Hiệu suất C']['liquidity'].item()*100).round(2)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "inflow_hsC",
-            "value": f"{ceil((market_breath_df[market_breath_df['name']=='Hiệu suất C']['in_flow'].item()/market_breath_df[market_breath_df['name']=='Hiệu suất C'][['in_flow','out_flow']].sum(axis=1)).item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "outflow_hsC",
-            "value": f"{floor((market_breath_df[market_breath_df['name']=='Hiệu suất C']['out_flow'].item()/market_breath_df[market_breath_df['name']=='Hiệu suất C'][['in_flow','out_flow']].sum(axis=1)).item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "top_group_hsC",
-            "value": f"dòng tiền mạnh nhất là {itd_score_liquidity_last[itd_score_liquidity_last['group']=='C'].sort_values('score', ascending=False)['name'].iloc[:2].str.cat(sep=', ')} \
-                                                                                và yếu nhất là {itd_score_liquidity_last[itd_score_liquidity_last['group']=='C'].sort_values('score')['name'].iloc[:2].str.cat(sep=', ')}",
-        },
-        ignore_index=True,
-    )
-
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "score_hsD",
-            "value": f"{itd_score_liquidity_last[itd_score_liquidity_last['name']=='Hiệu suất D']['score'].item():+.2f}",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "liquidity_hsD",
-            "value": f"{(itd_score_liquidity_last[itd_score_liquidity_last['name']=='Hiệu suất D']['liquidity'].item()*100).round(2)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "inflow_hsD",
-            "value": f"{ceil((market_breath_df[market_breath_df['name']=='Hiệu suất D']['in_flow'].item()/market_breath_df[market_breath_df['name']=='Hiệu suất D'][['in_flow','out_flow']].sum(axis=1)).item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "outflow_hsD",
-            "value": f"{floor((market_breath_df[market_breath_df['name']=='Hiệu suất D']['out_flow'].item()/market_breath_df[market_breath_df['name']=='Hiệu suất D'][['in_flow','out_flow']].sum(axis=1)).item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "top_group_hsD",
-            "value": f"dòng tiền mạnh nhất là {itd_score_liquidity_last[itd_score_liquidity_last['group']=='D'].sort_values('score', ascending=False)['name'].iloc[:2].str.cat(sep=', ')} \
-                                                                                và yếu nhất là {itd_score_liquidity_last[itd_score_liquidity_last['group']=='D'].sort_values('score')['name'].iloc[:2].str.cat(sep=', ')}",
-        },
-        ignore_index=True,
-    )
-
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "name_bot_cap",
-            "value": itd_score_liquidity_last[
-                itd_score_liquidity_last["group"] == "cap"
-            ]
-            .sort_values("score")["name"]
-            .iloc[0],
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "score_bot_cap",
-            "value": f"{itd_score_liquidity_last[itd_score_liquidity_last['name']==itd_score_liquidity_last[itd_score_liquidity_last['group']=='cap'].sort_values('score')['name'].iloc[0]]['score'].item():+.2f}",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "liquidity_bot_cap",
-            "value": f"{(itd_score_liquidity_last[itd_score_liquidity_last['name']==itd_score_liquidity_last[itd_score_liquidity_last['group']=='cap'].sort_values('score')['name'].iloc[0]]['liquidity'].item()*100).round(2)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "inflow_bot_cap",
-            "value": f"{ceil((market_breath_df[market_breath_df['name']==itd_score_liquidity_last[itd_score_liquidity_last['group']=='cap'].sort_values('score')['name'].iloc[0]]['in_flow'].item()/market_breath_df[market_breath_df['name']==itd_score_liquidity_last[itd_score_liquidity_last['group']=='cap'].sort_values('score')['name'].iloc[0]][['in_flow','out_flow']].sum(axis=1)).item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "outflow_bot_cap",
-            "value": f"{floor((market_breath_df[market_breath_df['name']==itd_score_liquidity_last[itd_score_liquidity_last['group']=='cap'].sort_values('score')['name'].iloc[0]]['out_flow'].item()/market_breath_df[market_breath_df['name']==itd_score_liquidity_last[itd_score_liquidity_last['group']=='cap'].sort_values('score')['name'].iloc[0]][['in_flow','out_flow']].sum(axis=1)).item()*100)}%",
-        },
-        ignore_index=True,
-    )
-
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "name_top_cap",
-            "value": itd_score_liquidity_last[
-                itd_score_liquidity_last["group"] == "cap"
-            ]
-            .sort_values("score")["name"]
-            .iloc[-1],
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "score_top_cap",
-            "value": f"{itd_score_liquidity_last[itd_score_liquidity_last['name']==itd_score_liquidity_last[itd_score_liquidity_last['group']=='cap'].sort_values('score')['name'].iloc[-1]]['score'].item():+.2f}",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "liquidity_top_cap",
-            "value": f"{(itd_score_liquidity_last[itd_score_liquidity_last['name']==itd_score_liquidity_last[itd_score_liquidity_last['group']=='cap'].sort_values('score')['name'].iloc[-1]]['liquidity'].item()*100).round(2)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "inflow_top_cap",
-            "value": f"{ceil((market_breath_df[market_breath_df['name']==itd_score_liquidity_last[itd_score_liquidity_last['group']=='cap'].sort_values('score')['name'].iloc[-1]]['in_flow'].item()/market_breath_df[market_breath_df['name']==itd_score_liquidity_last[itd_score_liquidity_last['group']=='cap'].sort_values('score')['name'].iloc[-1]][['in_flow','out_flow']].sum(axis=1)).item()*100)}%",
-        },
-        ignore_index=True,
-    )
-    daily_report_df = daily_report_df.append(
-        {
-            "name": "outflow_top_cap",
-            "value": f"{floor((market_breath_df[market_breath_df['name']==itd_score_liquidity_last[itd_score_liquidity_last['group']=='cap'].sort_values('score')['name'].iloc[-1]]['out_flow'].item()/market_breath_df[market_breath_df['name']==itd_score_liquidity_last[itd_score_liquidity_last['group']=='cap'].sort_values('score')['name'].iloc[-1]][['in_flow','out_flow']].sum(axis=1)).item()*100)}%",
-        },
-        ignore_index=True,
-    )
-
-    top5_stock = market_top_stock.sort_values("t0_score", ascending=False).iloc[:5]
-    top5_stock["price_change"] = top5_stock["price_change"].apply(
-        lambda x: f"{round(x*100, 2):+.2f}%"
-    )
-    top5_stock = top5_stock[["stock", "price_change"]]
-    top5_stock = top5_stock.apply(
-        lambda row: f"{row['stock']} ({row['price_change']})", axis=1
-    ).str.cat(sep=", ")
-    daily_report_df = daily_report_df.append(
-        {"name": "top5_stock", "value": top5_stock}, ignore_index=True
-    )
-
-    bot5_stock = market_top_stock.sort_values("t0_score").iloc[:5]
-    bot5_stock["price_change"] = bot5_stock["price_change"].apply(
-        lambda x: f"{round(x*100, 2):+.2f}%"
-    )
-    bot5_stock = bot5_stock[["stock", "price_change"]]
-    bot5_stock = bot5_stock.apply(
-        lambda row: f"{row['stock']} ({row['price_change']})", axis=1
-    ).str.cat(sep=", ")
-    daily_report_df = daily_report_df.append(
-        {"name": "bot5_stock", "value": bot5_stock}, ignore_index=True
-    )
-
     # #### Lưu vào SQL
-
-    # In[436]:
 
     from sqlalchemy import MetaData, create_engine, text
 
@@ -4154,7 +3646,6 @@ def run_data():
     save_dataframe_to_sql(stock_score_month, "stock_score_month", engine)
     save_dataframe_to_sql(stock_score_power_df, "stock_score_power_df", engine)
     save_dataframe_to_sql(filter_stock_df, "filter_stock_df", engine)
-    save_dataframe_to_sql(daily_report_df, "daily_report_df", engine)
 
 
 def get_current_time(start_time_am, end_time_am, start_time_pm, end_time_pm):
@@ -4184,7 +3675,6 @@ import pandas as pd
 
 print("Dữ liệu đang được xử lý ...")
 
-# run_data()
 while True:
     try:
         start_time = time.time()
@@ -4227,5 +3717,6 @@ while True:
         print(
             f"Updated: {datetime.combine(date_series['date'].date(), current_time).strftime('%d/%m/%Y %H:%M:%S')}, Completed in: {int(end_time - start_time)}s"
         )
+
     except Exception as e:
         print(f"Error: {type(e).__name__}")
