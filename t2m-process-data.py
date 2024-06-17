@@ -515,35 +515,35 @@ def run_data():
 
     # In[151]:
 
-
-    #Tính toán các cột cần thiết để lọc danh sách cổ phiếu dòng tiền
+    # Tính toán các cột cần thiết để lọc danh sách cổ phiếu dòng tiền
     raw_eod_score_dict = {}
     for stock in eod_stock_dict.keys():
-        raw_eod_score_dict[stock] = eod_stock_dict[stock]
-        [['stock', 'date', 'high', 'low', 'close', 'volume','liquid_ratio','cap', 'ma5_V', 'ma20_V','ma60_V','ma120_V','ma5']]
+        raw_eod_score_dict[stock] = eod_stock_dict[stock][['stock', 'date', 'high', 'low', 'close', 'volume', 'liquid_ratio', 'cap', 'ma5_V', 'ma20_V', 'ma60_V', 'ma120_V', 'ma5']]
         
         raw_eod_score_dict[stock]['ma5_prev'] = raw_eod_score_dict[stock]['ma5'].shift(-1)
         raw_eod_score_dict[stock]['close_prev'] = raw_eod_score_dict[stock]['close'].shift(-1)
 
         raw_eod_score_dict[stock]['raw_score'] = score_calculation(raw_eod_score_dict[stock])
-        raw_eod_score_dict[stock]['raw_score'].iloc[0] = raw_eod_score_dict[stock]['raw_score'].iloc[0].item()/current_time_percent
+        raw_eod_score_dict[stock]['raw_score'].iloc[0] = raw_eod_score_dict[stock]['raw_score'].iloc[0].item() / current_time_percent
 
         raw_eod_score_dict[stock]['highest_price'] = raw_eod_score_dict[stock]['close'][::-1].rolling(window=40, min_periods=1).max()[::-1]
         raw_eod_score_dict[stock]['lowest_volume60'] = raw_eod_score_dict[stock]['volume'][::-1].rolling(window=60, min_periods=1).min().shift(1)[::-1]
         raw_eod_score_dict[stock]['mean_volume20'] = raw_eod_score_dict[stock]['volume'][::-1].rolling(window=20, min_periods=1).mean().shift(1)[::-1]
 
-    #Lọc danh sách cổ phiếu dòng tiền
-    eod_score_dict = {stock: df[['stock', 'date', 'close','low','high', 'volume', 'liquid_ratio', 'raw_score','cap']] 
-                        for stock, df in raw_eod_score_dict.items() 
-                        if all([
-                            df['ma5_V'][0] >= 50000,
-                            df['ma20_V'][0] >= 50000,
-                            df['ma60_V'][0] >= 50000,
-                            df['ma120_V'][0] >= 50000,
-                            df['lowest_volume60'][0] > 0,
-                            df['mean_volume20'][0] >= 50000,
-                            df['close'][0] > df['highest_price'][0] * 0.382
-                        ])}
+    # Lọc danh sách cổ phiếu dòng tiền
+    eod_score_dict = {
+        stock: df[['stock', 'date', 'close', 'low', 'high', 'volume', 'liquid_ratio', 'raw_score', 'cap']]
+        for stock, df in raw_eod_score_dict.items()
+        if all([
+            (df[df['date'] == first_day_of_month]['ma5_V'] >= 50000).all(),
+            (df[df['date'] == first_day_of_month]['ma20_V'] >= 50000).all(),
+            (df[df['date'] == first_day_of_month]['ma60_V'] >= 50000).all(),
+            (df[df['date'] == first_day_of_month]['ma120_V'] >= 50000).all(),
+            (df[df['date'] == first_day_of_month]['lowest_volume60'] > 0).all(),
+            (df[df['date'] == first_day_of_month]['mean_volume20'] >= 50000).all(),
+            (df[df['date'] == first_day_of_month]['close'] > df[df['date'] == first_day_of_month]['highest_price'] * 0.382).all()
+        ])
+    }
 
     stock_classification_filtered = stock_classification[stock_classification['stock'].isin(eod_score_dict.keys())].reset_index(drop=True)
 
@@ -2467,7 +2467,7 @@ import pandas as pd
 
 print("Dữ liệu đang được xử lý ...")
 
-run_test()
+# run_test()
 while True:
     try:
         start_time = time.time()
