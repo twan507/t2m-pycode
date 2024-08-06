@@ -1,0 +1,37 @@
+
+cap = (Ref(C,-1)*OI)/1000000;
+
+SetOption("NoDefaultcolumns", True);
+
+AddTextColumn(Name(), "stock", 1);
+AddColumn(DateTime(), "date", formatDateTime);
+
+Filter = Close;
+
+fh = fopen( "D:\\t2m-project\\ami-data\\ami_itd_data\\"+Name()+".csv", "w" );
+
+if( fh )
+{
+  fputs("stock,date,open,high,low,close,volume,option,cap\n", fh );
+  date_num = DateTime();
+  
+  for( i = 1; i < BarCount; i++ )
+  {
+   Line = 
+   Name() + "," +
+   DateTimeFormat("%y%m%d %H%M%S", date_num[ i ]) +
+   StrFormat(",%g,%g,%g,%g,%g,%g,%g\n",
+   O[ i ],
+   H[ i ],
+   L[ i ],
+   C[ i ],
+   V[ i ],
+   OI[ i ],
+   cap[ i ] );
+  
+   fputs( Line, fh );
+  }
+ 
+  fclose( fh );
+}
+Buy=Sell=0;
