@@ -1,0 +1,6 @@
+[ssh]
+server_ip=14.225.192.30
+server_username=root
+server_password=eJMh6yYR5qnhblsvl018
+server_path=/root/mysql_backup
+server_db_name=t2m

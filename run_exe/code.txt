@@ -1,2 +1,0 @@
-pyinstaller --onefile run-data-heavy.py
-pyinstaller --onefile run-data-light.py
