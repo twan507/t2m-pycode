@@ -67,7 +67,7 @@ def run_period_data():
 
     end_time = time.time()
 
-    print(f"Updated: {datetime.combine(date_series['date'].date(), current_time).strftime('%d/%m/%Y %H:%M:%S')}, Completed in: {int(end_time - start_time)}s \n")
+    print(f"Update time: {datetime.combine(date_series['date'].date(), current_time).strftime('%d/%m/%Y %H:%M:%S')}, Real time: {dt.datetime.now().time().strftime('%H:%M:%S')}, Completed in: {int(end_time - start_time)} \n")
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -108,7 +108,7 @@ while True:
 
         end_time = time.time()
 
-        print(f"Updated: {datetime.combine(date_series['date'].date(), current_time).strftime('%d/%m/%Y %H:%M:%S')}, Completed in: {int(end_time - start_time)}s")
+        print(f"Update time: {datetime.combine(date_series['date'].date(), current_time).strftime('%d/%m/%Y %H:%M:%S')}, Real time: {dt.datetime.now().time().strftime('%H:%M:%S')}, Completed in: {int(end_time - start_time)}s")
     except Exception as e:
         print(f"Error: {type(e).__name__}")
     
