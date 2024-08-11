@@ -71,11 +71,11 @@ def run_period_data():
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# try:
-#     print("Running period data...")
-#     run_period_data()
-# except Exception as e:
-#     print(f"Error: {type(e).__name__}")
+try:
+    print("Running period data...")
+    run_period_data()
+except Exception as e:
+    print(f"Error: {type(e).__name__}")
     
 print("Running current data ...")
 while True:
@@ -83,22 +83,22 @@ while True:
         start_time = time.time()
         current_time, run_state = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
 
-        # if run_state == 1:
-        #     print("Chưa tới thời gian giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-        #     time.sleep(60)
-        #     continue
-        # elif run_state == 2:
-        #     print("Đã hết thời gian giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-        #     time.sleep(14000)
-        #     continue
-        # elif run_state == 3:
-        #     print("Ngày nghỉ không giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-        #     time.sleep(86400)
-        #     continue
-        # elif run_state == 4:
-        #     print("Ngoài thời gian giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-        #     time.sleep(42000)
-        #     continue
+        if run_state == 1:
+            print("Chưa tới thời gian giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+            time.sleep(60)
+            continue
+        elif run_state == 2:
+            print("Đã hết thời gian giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+            time.sleep(14000)
+            continue
+        elif run_state == 3:
+            print("Ngày nghỉ không giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+            time.sleep(86400)
+            continue
+        elif run_state == 4:
+            print("Ngoài thời gian giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+            time.sleep(42000)
+            continue
 
         date_series = pd.read_csv("D:\\t2m-project\\ami-data\\ami_eod_data\\VNINDEX.csv").iloc[-1]
         date_series["date"] = pd.to_datetime(date_series["date"].astype(str), format="%y%m%d")
