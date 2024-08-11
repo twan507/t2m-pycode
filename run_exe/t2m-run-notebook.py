@@ -17,33 +17,32 @@ if platform.system() == "Windows":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     
 def get_current_time(start_time_am, end_time_am, start_time_pm, end_time_pm, start_time_ev, end_time_ev):
-    if (dt.datetime.now()).weekday() <= 4:
-        current_time = dt.datetime.now().time()
+    current_time = dt.datetime.now().time()  # Khai báo trước để tránh UnboundLocalError
+    run_state = None  # Mặc định là None để xử lý trường hợp không vào bất kỳ nhánh nào
+
+    # Xác định thứ trong tuần là ngày làm việc hay cuối tuần
+    if dt.datetime.now().weekday() <= 4:  # Ngày làm việc
         if current_time < start_time_am:
-            current_time = start_time_am
             run_state = 1
-        elif (current_time >= start_time_am) & (current_time < end_time_am):
-            current_time = current_time
+        elif start_time_am <= current_time < end_time_am:
             run_state = 0
-        elif (current_time >= end_time_am) & (current_time < start_time_pm):
-            current_time = end_time_am
+        elif end_time_am <= current_time < start_time_pm:
             run_state = 0
-        elif (current_time >= start_time_pm) & (current_time < end_time_pm):
-            current_time = current_time
+        elif start_time_pm <= current_time < end_time_pm:
             run_state = 0
-        elif (current_time >= end_time_pm) & (current_time < start_time_ev):
-            current_time = end_time_pm
+        elif end_time_pm <= current_time < start_time_ev:
+            current_time = end_time_pm  # Cập nhật current_time để phản ánh thời điểm chuyển giao
             run_state = 2
-        elif (current_time >= start_time_ev) & (current_time < end_time_ev):
-            current_time = end_time_pm
+        elif start_time_ev <= current_time < end_time_ev:
+            current_time = end_time_pm  # Giữ nguyên
             run_state = 0
         elif current_time >= end_time_ev:
-            current_time = end_time_pm
+            current_time = end_time_pm  # Giữ nguyên
             run_state = 4
-    if (dt.datetime.now()).weekday() > 4:
+    else:  # Cuối tuần
         run_state = 3
 
-    return current_time, run_state
+    return current_time, run_state  # Trả về giá trị đã được xác định hoặc None nếu không vào nhánh nào
 
 def run_current_data(path):
     with open(path + "\\process_current_data.ipynb", "r", encoding="utf-8") as f:
@@ -51,9 +50,8 @@ def run_current_data(path):
     ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
     ep.preprocess(nb, {"metadata": {"path": path}})
 
-def run_period_data():
+def run_period_data(current_time):
     start_time = time.time()
-    current_time, run_state = get_current_time(dt.time(8, 30), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
 
     date_series = pd.read_csv("D:\\t2m-project\\ami-data\\ami_eod_data\\VNINDEX.csv").iloc[-1]
     date_series["date"] = pd.to_datetime(date_series["date"].astype(str), format="%y%m%d")
@@ -67,15 +65,17 @@ def run_period_data():
 
     end_time = time.time()
 
-    print(f"Update time: {datetime.combine(date_series['date'].date(), current_time).strftime('%d/%m/%Y %H:%M:%S')}, Real time: {dt.datetime.now().time().strftime('%H:%M:%S')}, Completed in: {int(end_time - start_time)} \n")
+    print(f"Update time: {datetime.combine(date_series['date'].date(), current_time).strftime('%d/%m/%Y %H:%M:%S')}, Real time: {dt.datetime.now().time().strftime('%H:%M:%S')}, Completed in: {int(end_time - start_time)}s \n")
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-try:
-    print("Running period data...")
-    run_period_data()
-except Exception as e:
-    print(f"Error: {type(e).__name__}")
+current_time, run_state = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
+if run_state == 1:
+    try:
+        print("Running period data...")
+        run_period_data(current_time)
+    except Exception as e:
+        print(f"Error: {type(e).__name__}")
     
 print("Running current data ...")
 while True:
@@ -92,13 +92,9 @@ while True:
             time.sleep(14000)
             continue
         elif run_state == 3:
-            print("Ngày nghỉ không giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-            time.sleep(86400)
-            continue
+            pass
         elif run_state == 4:
-            print("Ngoài thời gian giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-            time.sleep(42000)
-            continue
+            break
 
         date_series = pd.read_csv("D:\\t2m-project\\ami-data\\ami_eod_data\\VNINDEX.csv").iloc[-1]
         date_series["date"] = pd.to_datetime(date_series["date"].astype(str), format="%y%m%d")
