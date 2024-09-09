@@ -50,24 +50,28 @@ def run_current_data(path):
     ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
     ep.preprocess(nb, {"metadata": {"path": path}})
     
-print("Running capital allocation data ...")
 #Lấy ra ngày hiện tại
 date_series = pd.read_csv("D:\\t2m-project\\ami-data\\ami_eod_data\\VNINDEX.csv").iloc[-1]
 date_series["date"] = pd.to_datetime(date_series["date"].astype(str), format="%y%m%d")
 current_path = (os.getcwd())
 
 #Chạy test 1 lần trước
-start_time = time.time()
-current_time, run_state = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
-run_current_data(current_path)
+try:
+    print("Running test capital allocation data ...")
+    start_time = time.time()
+    current_time, run_state = get_current_time(dt.time(8, 30), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
+    run_current_data(current_path)
 
-end_time = time.time()
-print(f"Update time: {datetime.combine(date_series['date'].date(), current_time).strftime('%d/%m/%Y %H:%M:%S')}, Real time: {dt.datetime.now().time().strftime('%H:%M:%S')}, Completed in: {int(end_time - start_time)}s")
+    end_time = time.time()
+    print(f"Update time: {datetime.combine(date_series['date'].date(), current_time).strftime('%d/%m/%Y %H:%M:%S')}, Real time: {dt.datetime.now().time().strftime('%H:%M:%S')}, Completed in: {int(end_time - start_time)}s")
+except Exception as e:
+    print(f"Error: {type(e).__name__}")
 
+print("Running capital allocation data ...")
 while True:
     try:
         start_time = time.time()
-        current_time, run_state = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
+        current_time, run_state = get_current_time(dt.time(8, 30), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
 
         if run_state == 1:
             print("Chưa tới thời gian giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
