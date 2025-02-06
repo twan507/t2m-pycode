@@ -44,7 +44,9 @@ def get_current_time(start_time_am, end_time_am, start_time_pm, end_time_pm, sta
 
     return current_time, run_state  # Trả về giá trị đã được xác định hoặc None nếu không vào nhánh nào
 
-def run_auto_trading(current_time):
+def run_auto_trading():
+    current_time, _ = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
+
     start_time = time.time()
     current_date = pd.to_datetime(dt.datetime.now().date(), format="%Y-%m-%d")
     current_path = (os.path.dirname(os.getcwd()))
@@ -61,13 +63,13 @@ def run_auto_trading(current_time):
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #Tính toán thời gian và trạng thái phiên giao dịch
-current_time, run_state = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
+_, run_state = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
 
 #Nếu không trong giờ giao dịch thì chạy test 1 lần
 if run_state != 0:
     try:
         print("Running test auto trading ...")
-        run_auto_trading(current_time)
+        run_auto_trading()
     except Exception as e:
             print(f"Error: {type(e).__name__}")
 
@@ -90,7 +92,7 @@ while True:
         elif run_state == 4:
             break
         else:
-            run_auto_trading(current_time)
+            run_auto_trading()
     except Exception as e:
         print(f"Error: {type(e).__name__}")
     

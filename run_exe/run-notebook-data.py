@@ -44,7 +44,9 @@ def get_current_time(start_time_am, end_time_am, start_time_pm, end_time_pm, sta
 
     return current_time, run_state  # Trả về giá trị đã được xác định hoặc None nếu không vào nhánh nào
 
-def run_period_data(current_time):
+def run_period_data():
+    current_time, _ = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
+
     start_time = time.time()
     current_date = pd.to_datetime(dt.datetime.now().date(), format="%Y-%m-%d")
     current_path = (os.path.dirname(os.getcwd()))
@@ -58,7 +60,9 @@ def run_period_data(current_time):
 
     print(f"Update time: {datetime.combine(current_date, current_time).strftime('%d/%m/%Y %H:%M:%S')}, Completed in: {int(end_time - start_time)}s\n")
 
-def run_current_data(current_time):
+def run_current_data():
+    current_time, _ = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
+
     start_time = time.time()
     current_date = pd.to_datetime(dt.datetime.now().date(), format="%Y-%m-%d")
     current_path = (os.path.dirname(os.getcwd()))
@@ -76,13 +80,13 @@ def run_current_data(current_time):
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #Tính toán thời gian và trạng thái phiên giao dịch
-current_time, run_state = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
+_, run_state = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
 
 #Kiểm tra xem nếu trạng thái là 1 thì sẽ chạy period data
 if run_state == 1:
     try:
         print("Running period data...")
-        run_period_data(current_time)
+        run_period_data()
     except Exception as e:
         print(f"Error: {type(e).__name__}")
 
@@ -90,7 +94,7 @@ if run_state == 1:
 if run_state != 0:
     try:
         print("Running test current data ...")
-        run_current_data(current_time)
+        run_current_data()
     except Exception as e:
             print(f"Error: {type(e).__name__}")
 
@@ -113,7 +117,7 @@ while True:
         elif run_state == 4:
             break
         else:
-            run_current_data(current_time)
+            run_current_data()
     except Exception as e:
         print(f"Error: {type(e).__name__}")
     
