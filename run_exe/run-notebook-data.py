@@ -79,10 +79,8 @@ def run_current_data():
 
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#Tính toán thời gian và trạng thái phiên giao dịch
-_, run_state = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
-
 #Kiểm tra xem nếu trạng thái là 1 thì sẽ chạy period data
+_, run_state = get_current_time(dt.time(8, 30), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
 if run_state == 1:
     try:
         print("Running period data...")
@@ -101,6 +99,7 @@ if run_state != 0:
 #Tạo vòng lặp để chạy dữ liệu liên tục trong giờ giao dịch
 print("Running current data ...")
 while True:
+    _, run_state = get_current_time(dt.time(8, 30), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
     try:
         if run_state == 1:
             print("Chưa tới thời gian giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))

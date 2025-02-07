@@ -62,10 +62,8 @@ def run_auto_trading():
 
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#Tính toán thời gian và trạng thái phiên giao dịch
-_, run_state = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
-
 #Nếu không trong giờ giao dịch thì chạy test 1 lần
+_, run_state = get_current_time(dt.time(9, 00), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
 if run_state != 0:
     try:
         print("Running test auto trading ...")
@@ -76,6 +74,7 @@ if run_state != 0:
 #Tạo vòng lặp để chạy dữ liệu liên tục trong giờ giao dịch
 print("Running auto trading ...")
 while True:
+    _, run_state = get_current_time(dt.time(8, 30), dt.time(11, 30), dt.time(13, 00), dt.time(15, 10), dt.time(19, 00), dt.time(21, 00))
     try:
         if run_state == 1:
             print("Chưa tới thời gian giao dịch: ",dt.datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
