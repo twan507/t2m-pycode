@@ -51,7 +51,7 @@ def run_auto_trading():
     current_date = pd.to_datetime(dt.datetime.now().date(), format="%Y-%m-%d")
     current_path = (os.path.dirname(os.getcwd()))
 
-    with open(current_path + "\\t2m_period_data.ipynb", "r", encoding="utf-8") as f:
+    with open(current_path + "\\t2m_auto_trading.ipynb", "r", encoding="utf-8") as f:
         nb = nbformat.read(f, as_version=4)
     ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
     ep.preprocess(nb, {"metadata": {"path": current_path}})
