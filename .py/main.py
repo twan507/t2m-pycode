@@ -11,6 +11,9 @@ from tkinter import ttk, filedialog, messagebox
 from threading import Thread
 import asyncio
 
+# Set environment variables for debugger
+os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
+
 try:
     from asyncio import WindowsSelectorEventLoopPolicy
     # Chỉ áp dụng trên Windows
