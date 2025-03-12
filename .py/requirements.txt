@@ -1,0 +1,15 @@
+pandas
+numpy
+pandas_ta
+yfinance
+pymongo
+openpyxl
+nbformat
+nbconvert
+ipykernel
+jupyter_core
+dotenv
+feedparser
+requests
+bs4
+google.generativeai
