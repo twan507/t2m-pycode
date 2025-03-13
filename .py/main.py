@@ -219,6 +219,26 @@ class NotebookRunnerApp:
         # Start immediately - no more waiting for auto-start time
         self._start_notebook_immediately(notebook_path)
 
+    def run_all_notebooks_parallel(self):
+        """Run all notebooks in the running list simultaneously"""
+        if not self.running_notebooks:
+            messagebox.showwarning("Chú ý", "Không có notebook nào trong danh sách chạy.")
+            return
+        
+        # Count how many notebooks will be started
+        start_count = 0
+        
+        # Start all notebooks that aren't already running
+        for notebook_path, info in list(self.running_notebooks.items()):
+            if info['status'] != 'running':
+                self.start_notebook(notebook_path)
+                start_count += 1
+        
+        if start_count > 0:
+            self.log(f"Đã bắt đầu chạy đồng thời {start_count} notebooks")
+        else:
+            self.log("Tất cả notebooks đã đang chạy")
+
     def _start_notebook_immediately(self, notebook_path):
         """Actually start the notebook without any delay checks"""
         info = self.running_notebooks[notebook_path]
@@ -559,6 +579,12 @@ class NotebookRunnerApp:
                                     command=self.run_notebooks_sequentially, 
                                     width=20)
         run_sequential_btn.pack(side=tk.LEFT, padx=5, pady=5)
+
+        # Add new "Chạy đồng thời" button
+        run_parallel_btn = ttk.Button(notebooks_control_frame, text="Chạy đồng thời", 
+                                command=self.run_all_notebooks_parallel, 
+                                width=20)
+        run_parallel_btn.pack(side=tk.LEFT, padx=5, pady=5)
 
         # Add "Xóa tất cả" button between the other buttons
         remove_all_btn = ttk.Button(notebooks_control_frame, text="Xóa tất cả", 
