@@ -132,7 +132,7 @@ class NotebookRunnerApp:
         
         # Set window size and position
         self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
-        self.root.iconbitmap(r".py/t2m.ico")
+        self.root.iconbitmap(r".py/logo.ico")
         
         # Variables
         self.notebooks = []
@@ -393,8 +393,17 @@ class NotebookRunnerApp:
                         pass
                         
             else:
-                # For single-run notebooks, run them once and wait for completion
-                self.log(f"Chạy một lần: {notebook_name}")
+                # For non-loop mode notebooks, run them the specified number of times
+                try:
+                    runs_count = int(info['runs_var'].get())
+                except ValueError:
+                    runs_count = 2  # Default to 2 if value is invalid
+                
+                # Ensure valid runs count
+                if runs_count < 1:
+                    runs_count = 1
+                
+                self.log(f"Chạy {notebook_name} {runs_count} lần")
                 
                 # Update status and UI
                 info['status'] = 'running'
@@ -402,31 +411,65 @@ class NotebookRunnerApp:
                 
                 try:
                     # Update UI elements
-                    info['time_label'].config(text="00:00.0")
+                    info['time_label'].config(text="00m:00.0s")
                     info['status_label'].config(text="Đang chạy", foreground="blue")
                     info['controls']['start_btn'].config(state=tk.DISABLED)
                     info['controls']['stop_btn'].config(state=tk.NORMAL)
                     
-                    # Log the execution
-                    current_time = datetime.now().strftime("%H:%M:%S")
-                    info['log_text'].insert(tk.END, f"\n--- Chạy lần lượt (chế độ một lần) ({current_time}): ")
-                    info['log_text'].see(tk.END)
+                    # Run notebook the specified number of times
+                    for run_num in range(1, runs_count + 1):
+                        # Check stop flag
+                        if info['stop_flag'] or notebook_path not in self.running_notebooks:
+                            break
+                        
+                        # Log the execution
+                        current_time = datetime.now().strftime("%H:%M:%S")
+                        info['log_text'].insert(tk.END, f"\n--- Chạy lần lượt lần {run_num}/{runs_count} ({current_time}): ")
+                        info['log_text'].see(tk.END)
+                        
+                        # Execute notebook
+                        self.execute_notebook_with_log(notebook_path, info['log_text'], info['status_label'])
+                        
+                        # If it's not the last run and we haven't been stopped, wait briefly
+                        if run_num < runs_count and not info['stop_flag']:
+                            try:
+                                # Show waiting status
+                                if info['status_label'].winfo_exists():
+                                    info['status_label'].config(text=f"Đợi lần {run_num+1}/{runs_count}", foreground="blue")
+                                
+                                # Wait in small increments to keep UI responsive and check stop flag
+                                for _ in range(10):  # 10 x 0.1s = 1s
+                                    if info['stop_flag']:
+                                        break
+                                    time.sleep(0.1)
+                                    try:
+                                        self.root.update_idletasks()  # Keep UI responsive
+                                    except:
+                                        pass
+                                
+                                # Update status back to running
+                                if not info['stop_flag'] and info['status_label'].winfo_exists():
+                                    info['status_label'].config(text="Đang chạy", foreground="blue")
+                            except tk.TclError:
+                                pass
                     
-                    # Execute notebook once and wait for completion
-                    self.execute_notebook_with_log(notebook_path, info['log_text'], info['status_label'])
-                    
-                    # Update status after completion
-                    info['status'] = 'completed'
-                    info['status_label'].config(text="Hoàn thành", foreground="green")
-                    info['controls']['start_btn'].config(state=tk.NORMAL)
-                    info['controls']['stop_btn'].config(state=tk.DISABLED)
-                    
+                    # Update status after completion if not stopped
+                    if not info['stop_flag'] and notebook_path in self.running_notebooks:
+                        info['status'] = 'completed'
+                        info['status_label'].config(text="Hoàn thành", foreground="green")
+                        info['controls']['start_btn'].config(state=tk.NORMAL)
+                        info['controls']['stop_btn'].config(state=tk.DISABLED)
+                        
                 except Exception as e:
                     self.log(f"Lỗi khi chạy lần lượt {notebook_name}: {str(e)}")
-                    info['status'] = 'error'
-                    info['status_label'].config(text="Lỗi", foreground="red")
-                    info['controls']['start_btn'].config(state=tk.NORMAL)
-                    info['controls']['stop_btn'].config(state=tk.DISABLED)
+                    if notebook_path in self.running_notebooks:
+                        info['status'] = 'error'
+                        if 'status_label' in info and info['status_label'].winfo_exists():
+                            info['status_label'].config(text="Lỗi", foreground="red")
+                        if 'controls' in info and 'start_btn' in info['controls'] and info['controls']['start_btn'].winfo_exists():
+                            info['controls']['start_btn'].config(state=tk.NORMAL)
+                        if 'controls' in info and 'stop_btn' in info['controls'] and info['controls']['stop_btn'].winfo_exists():
+                            info['controls']['stop_btn'].config(state=tk.DISABLED)
         
         self.log("Đã hoàn thành chạy lần lượt tất cả notebooks")
 
@@ -533,7 +576,7 @@ class NotebookRunnerApp:
         hour_spin.pack(side=tk.LEFT, padx=2)
         ttk.Label(time_frame, text=":").pack(side=tk.LEFT)
         
-        self.auto_run_minute = tk.StringVar(value="00")
+        self.auto_run_minute = tk.StringVar(value="30")
         minute_spin = ttk.Spinbox(time_frame, from_=0, to=59, width=4, format="%02.0f", textvariable=self.auto_run_minute)
         minute_spin.pack(side=tk.LEFT, padx=2)
         
@@ -967,22 +1010,27 @@ class NotebookRunnerApp:
         status_label = ttk.Label(upper_frame, text="Sẵn sàng", foreground="blue")
         status_label.pack(side=tk.LEFT, padx=3)
 
-        # Loop settings group
+       # Loop settings group
         loop_frame = ttk.Frame(upper_frame)
         loop_frame.pack(side=tk.LEFT, padx=5)
 
         # Sleep frame - we'll handle the visibility of this
         sleep_frame = ttk.Frame(loop_frame)
 
+        # New: Run count frame for non-loop mode
+        runs_frame = ttk.Frame(loop_frame)
+
         # Loop checkbox with callback to show/hide sleep settings
         loop_var = tk.BooleanVar(value=True)  # Default to True (continuous execution)
 
-        # Create a function to toggle sleep settings visibility
+        # Create a function to toggle settings visibility based on loop mode
         def toggle_sleep_visibility(*args):
             if loop_var.get():
                 sleep_frame.pack(side=tk.LEFT, padx=(5, 0))
+                runs_frame.pack_forget()
             else:
                 sleep_frame.pack_forget()
+                runs_frame.pack(side=tk.LEFT, padx=(5, 0))
 
         # Setup the loop checkbox with the toggle callback
         loop_check = ttk.Checkbutton(loop_frame, text="Lặp lại", variable=loop_var, 
@@ -990,15 +1038,24 @@ class NotebookRunnerApp:
         loop_check.pack(side=tk.LEFT, padx=(0, 5))
 
         # Sleep time label and spinbox - in a separate frame for visibility control
-        ttk.Label(sleep_frame, text="Nghỉ:").pack(side=tk.LEFT, padx=(0, 0))
+        ttk.Label(sleep_frame, text="Nghỉ: ").pack(side=tk.LEFT, padx=(0, 0))
         sleep_var = tk.StringVar(value="1")
         sleep_spin = ttk.Spinbox(sleep_frame, from_=0, to=3600, width=4, textvariable=sleep_var)
         sleep_spin.pack(side=tk.LEFT, padx=(0, 0))
-        ttk.Label(sleep_frame, text="s").pack(side=tk.LEFT, padx=(0, 0))
+        ttk.Label(sleep_frame, text=" giây").pack(side=tk.LEFT, padx=(0, 0))
+        
+        # New: Run count controls for non-loop mode
+        ttk.Label(runs_frame, text="Số lần: ").pack(side=tk.LEFT, padx=(0, 0))
+        runs_var = tk.StringVar(value="2")  # Default to 2 runs
+        runs_spin = ttk.Spinbox(runs_frame, from_=1, to=100, width=4, textvariable=runs_var)
+        runs_spin.pack(side=tk.LEFT, padx=(0, 0))
+        ttk.Label(runs_frame, text=" lần").pack(side=tk.LEFT, padx=(0, 0))
 
-        # Initialize sleep visibility based on initial loop state
+        # Initialize visibility based on initial loop state
         if loop_var.get():
             sleep_frame.pack(side=tk.LEFT, padx=(5, 0))
+        else:
+            runs_frame.pack(side=tk.LEFT, padx=(5, 0))
         
         # Lower part: log display
         log_frame = ttk.Frame(frame)
@@ -1044,6 +1101,7 @@ class NotebookRunnerApp:
             'log_text': log_text,
             'loop_var': loop_var,
             'sleep_var': sleep_var,
+            'runs_var': runs_var,  # Add the runs_var to track the number of runs
             'controls': {
                 'start_btn': start_btn,
                 'stop_btn': stop_btn,
@@ -1051,6 +1109,7 @@ class NotebookRunnerApp:
                 'remove_btn': remove_btn,
                 'loop_check': loop_check,
                 'sleep_spin': sleep_spin,
+                'runs_spin': runs_spin,  # Also add reference to the runs spinbox
                 'up_btn': up_btn,
                 'down_btn': down_btn
             }
@@ -1223,34 +1282,77 @@ class NotebookRunnerApp:
 
                 iteration += 1
             else:
-                # Xử lý chạy một lần
-                info['time'] = 0.0
+                # Chạy số lần xác định (thay vì chạy một lần)
                 try:
-                    if info['time_label'].winfo_exists():
-                        info['time_label'].config(text="00m:00.0s")
-                except tk.TclError:
-                    pass
+                    runs_count = int(info['runs_var'].get())
+                except ValueError:
+                    runs_count = 2  # Mặc định là 2 nếu giá trị không hợp lệ
                 
-                current_time = datetime.now().strftime("%H:%M:%S")
-                try:
-                    log_text.insert(tk.END, f"\n--- Chạy một lần ({current_time}): ")
-                    log_text.see(tk.END)
-                except tk.TclError:
-                    pass
+                # Đảm bảo số lần chạy hợp lệ
+                if runs_count < 1:
+                    runs_count = 1
                 
-                self.execute_notebook_with_log(notebook_path, log_text, info['status_label'])
+                # Chạy notebook theo số lần đã chọn
+                for run_num in range(1, runs_count + 1):
+                    # Kiểm tra cờ dừng
+                    if info['stop_flag']:
+                        break
+                    
+                    # Reset thời gian cho mỗi lần chạy
+                    info['time'] = 0.0
+                    try:
+                        if info['time_label'].winfo_exists():
+                            info['time_label'].config(text="00m:00.0s")
+                    except tk.TclError:
+                        pass
+                    
+                    # Hiển thị thông tin lần chạy hiện tại
+                    current_time = datetime.now().strftime("%H:%M:%S")
+                    try:
+                        # Hiển thị số lần chạy hiện tại / tổng số lần chạy
+                        log_text.insert(tk.END, f"\n--- Chạy lần {run_num}/{runs_count} ({current_time}): ")
+                        log_text.see(tk.END)
+                    except tk.TclError:
+                        pass
+                    
+                    # Thực thi notebook
+                    self.execute_notebook_with_log(notebook_path, log_text, info['status_label'])
+                    
+                    # Kiểm tra cờ dừng sau khi chạy
+                    if info['stop_flag']:
+                        break
+                    
+                    # Chờ giữa các lần chạy (nếu không phải lần cuối)
+                    if run_num < runs_count and not info['stop_flag']:
+                        try:
+                            # Hiển thị trạng thái chờ
+                            if info['status_label'].winfo_exists():
+                                info['status_label'].config(text=f"Đợi lần {run_num+1}", foreground="blue")
+                            
+                            # Chờ 1 giây giữa các lần chạy (nhưng vẫn kiểm tra cờ dừng)
+                            for _ in range(10):  # 10 x 0.1s = 1s
+                                if info['stop_flag']:
+                                    break
+                                time.sleep(0.1)
+                            
+                            # Cập nhật lại trạng thái
+                            if not info['stop_flag'] and info['status_label'].winfo_exists():
+                                info['status_label'].config(text="Đang chạy", foreground="blue")
+                        except tk.TclError:
+                            pass
 
-                # Update UI to show completed state
-                info['status'] = 'completed'
-                try:
-                    if info['status_label'].winfo_exists():
-                        info['status_label'].config(text="Hoàn thành", foreground="green")
-                    if info['controls']['start_btn'].winfo_exists():
-                        info['controls']['start_btn'].config(state=tk.NORMAL)
-                    if info['controls']['stop_btn'].winfo_exists():
-                        info['controls']['stop_btn'].config(state=tk.DISABLED)
-                except tk.TclError:
-                    pass
+                # Cập nhật UI sau khi hoàn thành hoặc dừng
+                if not info['stop_flag']:
+                    info['status'] = 'completed'
+                    try:
+                        if info['status_label'].winfo_exists():
+                            info['status_label'].config(text="Hoàn thành", foreground="green")
+                        if info['controls']['start_btn'].winfo_exists():
+                            info['controls']['start_btn'].config(state=tk.NORMAL)
+                        if info['controls']['stop_btn'].winfo_exists():
+                            info['controls']['stop_btn'].config(state=tk.DISABLED)
+                    except tk.TclError:
+                        pass
                 break
                 
     
