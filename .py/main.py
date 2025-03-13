@@ -485,6 +485,23 @@ class NotebookRunnerApp:
             self.log(f"Đã tự động dừng {stopped_count} notebooks vào lúc {self.hour_var.get()}:{self.minute_var.get()}")
         
         return stopped_count
+    
+    def clear_all_logs(self):
+        """Clear logs for all notebooks in the running list"""
+        # Count how many notebook logs were cleared
+        cleared_count = 0
+        
+        # Clear each notebook's log
+        for notebook_path, info in self.running_notebooks.items():
+            if 'log_text' in info and info['log_text'].winfo_exists():
+                info['log_text'].delete(1.0, tk.END)
+                cleared_count += 1
+        
+        # Log the action
+        if cleared_count > 0:
+            self.log(f"Đã xóa log của {cleared_count} notebooks")
+        else:
+            self.log("Không có log nào để xóa")
 
     def clear_notebook_selection(self):
         """Clear the selection in the notebook listbox"""
@@ -640,6 +657,12 @@ class NotebookRunnerApp:
                                 command=self.stop_all_notebooks, 
                                 width=20)
         stop_all_btn.pack(side=tk.RIGHT, padx=5, pady=5)
+
+        # Add new "Xóa tất cả Log" button
+        clear_all_logs_btn = ttk.Button(notebooks_control_frame, text="Xóa tất cả Log", 
+                                command=self.clear_all_logs, 
+                                width=20)
+        clear_all_logs_btn.pack(side=tk.RIGHT, padx=5, pady=5)
 
         # Running notebooks frame
         self.running_frame = ttk.LabelFrame(main_frame, text="Notebooks đang chạy")
