@@ -13,3 +13,6 @@ feedparser
 requests
 bs4
 google.generativeai
+pymysql
+
+# pip install -r requirements.txt
